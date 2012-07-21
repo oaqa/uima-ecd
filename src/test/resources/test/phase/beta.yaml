@@ -1,0 +1,5 @@
+class: edu.cmu.lti.oaqa.cse.example.BasePhaseTestAnnotator
+name: beta
+cross-opts:
+  parameter-a: [value--l,value--m]
+  parameter-b: [value--i,value--o]
