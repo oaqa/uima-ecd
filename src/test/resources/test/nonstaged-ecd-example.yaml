@@ -1,41 +1,27 @@
 experiment:
   name: test-experiment
   author: junit
-
-configuration:
-  inherit: db.local-cse-config
-
-collection-reader:
-  inherit: db.local-collection-reader
-  dataset: TREC11
-  named-subset: SMALL_TREC11
   
 pipeline:
   - inherit: ecd.phase
     name: first-phase
     options: |
-      - inherit: example.first-phase-annotator-a
-      - class: edu.cmu.lti.oaqa.cse.example.FirstPhaseAnnotatorB1 
-      - pipeline: [class: edu.cmu.lti.oaqa.cse.example.FirstPhaseAnnotatorB1, inherit: example.first-phase-annotator-copts, pipeline: [inherit: example.first-phase-annotator-a, inherit: example.first-phase-annotator-copts2]]  
+      - inherit: test.first-phase-annotator-a
+      - class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1 
+      - pipeline: [class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1, inherit: test.first-phase-annotator-copts, pipeline: [inherit: test.first-phase-annotator-a, inherit: test.first-phase-annotator-copts2]]  
      
       
   - inherit: ecd.phase
     name: second-phase  
     options: |
-      - class: edu.cmu.lti.oaqa.cse.example.SecondPhaseAnnotatorA1
-      - class: edu.cmu.lti.oaqa.cse.example.SecondPhaseAnnotatorB1
-      - class: edu.cmu.lti.oaqa.cse.example.SecondPhaseAnnotatorC1
+      - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorA1
+      - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorB1
+      - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorC1
 
   - inherit: ecd.phase
     name: third-phase  
     options: |
-      - inherit: example.third-phase-annotator
-      
-  - inherit: eval.base-retrieval-aggregator
-      
-  - inherit: eval.trace-consumer
-    listeners: |
-      - inherit: eval.example-trace-listener
+      - inherit: test.third-phase-annotator
 
 post-process: 
   - inherit: eval.retrieval-measures-evaluator

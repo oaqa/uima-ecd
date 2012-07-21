@@ -1,2 +1,2 @@
-class: edu.cmu.lti.oaqa.cse.example.BasePhaseTestAnnotator
+class: edu.cmu.lti.oaqa.ecd.example.BasePhaseTestAnnotator
 name: d

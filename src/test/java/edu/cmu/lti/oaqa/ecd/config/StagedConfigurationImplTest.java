@@ -69,7 +69,7 @@ public class StagedConfigurationImplTest {
   public void nonStagedConfigIsCorrect() throws IOException {
     AnyObject conf = ConfigurationLoader.load("test.nonstaged-ecd-example"); 
     StagedConfigurationImpl staged = new StagedConfigurationImpl(conf);
-    int[] sizes = new int[] {5};
+    int[] sizes = new int[] {3};
     int i = 0;
     for (Stage stage : staged) {
       validateConfiguration(stage.getConfiguration(), sizes[i++]);
@@ -81,8 +81,8 @@ public class StagedConfigurationImplTest {
     for (AnyTuple tuple : config.getTuples()) {
       keys.add(tuple.getKey());
     }
-    assertThat(keys.size(), is(equalTo(5)));
-    assertThat(keys, hasItems("experiment", "configuration", "collection-reader", "pipeline", "post-process"));
+    assertThat(keys.size(), is(equalTo(3)));
+    assertThat(keys, hasItems("experiment", "pipeline", "post-process"));
     List<Object> pipeline = Lists.newArrayList(config.getIterable("pipeline"));
     assertThat(pipeline.size(), is(equalTo(pipelineSize)));
   }

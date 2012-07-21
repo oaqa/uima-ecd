@@ -46,31 +46,31 @@ stages:
       - inherit: ecd.phase
         name: phase-combination
         options: |
-          - inherit: example.first-phase-annotator-a
-          - pipeline: [class: edu.cmu.lti.oaqa.cse.example.FirstPhaseAnnotatorB1,inherit: example.first-phase-annotator-a]            
+          - inherit: test.first-phase-annotator-a
+          - pipeline: [class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1,inherit: test.first-phase-annotator-a]            
           - pipeline:
-             - class: edu.cmu.lti.oaqa.cse.example.FirstPhaseAnnotatorB1
-             - inherit: example.first-phase-annotator-a
+             - class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1
+             - inherit: test.first-phase-annotator-a
 
       - inherit: ecd.phase
         name: phase-combination-with-copts
         options: |
-          - inherit: example.first-phase-annotator-a
-          - class: edu.cmu.lti.oaqa.cse.example.FirstPhaseAnnotatorB1            
+          - inherit: test.first-phase-annotator-a
+          - class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1            
           - pipeline:
-             - class: edu.cmu.lti.oaqa.cse.example.FirstPhaseAnnotatorB1
-             - inherit: example.first-phase-annotator-copts
+             - class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1
+             - inherit: test.first-phase-annotator-copts
       
       - inherit: ecd.phase
         name: second-phase  
         options: | 
-          - class: edu.cmu.lti.oaqa.cse.example.SecondPhaseAnnotatorA1
-          - class: edu.cmu.lti.oaqa.cse.example.SecondPhaseAnnotatorB1
-          - class: edu.cmu.lti.oaqa.cse.example.SecondPhaseAnnotatorC1  
+          - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorA1
+          - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorB1
+          - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorC1  
     
   - stage:
     pipeline:
       - inherit: ecd.phase 
         name: third-phase  
         options: |
-          - inherit: example.third-phase-annotator
+          - inherit: test.third-phase-annotator

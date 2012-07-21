@@ -59,6 +59,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import edu.cmu.lti.oaqa.ecd.AbstractExperimentBuilder;
+import edu.cmu.lti.oaqa.ecd.CasUtils;
 import edu.cmu.lti.oaqa.ecd.ResourceHandle;
 import edu.cmu.lti.oaqa.ecd.ResourceHandle.HandleType;
 import edu.cmu.lti.oaqa.framework.types.ExperimentUUID;
@@ -188,7 +189,7 @@ public abstract class AbstractPhase extends JCasMultiplier_ImplBase {
   private void insertExecutionTrace(JCas jcas, final String optionId, final long startTime,
           final String prevCas, final Trace trace, final String key) throws IOException {
     final String uuid = ProcessingStepUtils.getCurrentExperimentId(jcas);
-    InputElement input = (InputElement) ProcessingStepUtils.getFirst(jcas, InputElement.class.getName());
+    InputElement input = (InputElement) CasUtils.getFirst(jcas, InputElement.class.getName());
     final String dataset = input.getDataset();
     final int sequenceId = input.getSequenceId();
     insertExecutionTrace(optionId, sequenceId, dataset, getPhaseNo(), uuid, startTime, getHostName(), trace.getTrace(), key);

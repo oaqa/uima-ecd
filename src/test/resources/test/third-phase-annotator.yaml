@@ -14,7 +14,7 @@
 # ThirdPhaseAnnotatorA1(bar,value3,value5,value6,value7)
 # ThirdPhaseAnnotatorA1(bar,value2,value5,value6,value7)
 
-class: edu.cmu.lti.oaqa.cse.example.ThirdPhaseAnnotatorA1
+class: edu.cmu.lti.oaqa.ecd.example.ThirdPhaseAnnotatorA1
 foo: bar
 cross-opts:
   parameter-a: [value1,value2]
