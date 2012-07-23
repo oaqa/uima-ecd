@@ -41,7 +41,7 @@ experiment:
   author: junit
   
 persistence-provider:
-  inherit: ecd.default-provider
+  inherit: ecd.default-experiment-persistence-provider
   
 stages:
   - stage:

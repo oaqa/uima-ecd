@@ -56,8 +56,8 @@ import com.google.common.collect.Maps;
 
 import edu.cmu.lti.oaqa.ecd.ResourceHandle.HandleType;
 import edu.cmu.lti.oaqa.ecd.config.ConfigurationLoader;
-import edu.cmu.lti.oaqa.ecd.impl.DefaultPersistenceProvider;
-import edu.cmu.lti.oaqa.ecd.phase.AbstractPhase;
+import edu.cmu.lti.oaqa.ecd.persistence.DefaultExperimentPersistenceProvider;
+import edu.cmu.lti.oaqa.ecd.phase.BasePhase;
 
 public final class BaseExperimentBuilder implements ExperimentBuilder {
 
@@ -75,7 +75,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   
   private final AnyObject configuration;
   
-  private final PersistenceProvider persistence;
+  private final ExperimentPersistenceProvider persistence;
 
   public BaseExperimentBuilder(String experimentUuid, String resource, TypeSystemDescription typeSystem) throws Exception {
     this.typeSystem = typeSystem;
@@ -85,12 +85,12 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     insertExperiment(configuration, resource);
   }
 
-  private PersistenceProvider newPersistenceProvider(AnyObject config) throws Exception {
+  private ExperimentPersistenceProvider newPersistenceProvider(AnyObject config) throws Exception {
     AnyObject pprovider = config.getAnyObject("persistence-provider");
     if (pprovider == null) {
-      return new DefaultPersistenceProvider();
+      return new DefaultExperimentPersistenceProvider();
     }
-    return initializeResource(config, "persistence-provider", PersistenceProvider.class); 
+    return initializeResource(config, "persistence-provider", ExperimentPersistenceProvider.class); 
   }
   
   @Override
@@ -158,7 +158,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   public AnalysisEngineDescription buildComponent(int stageId, int phase, AnyObject aeDescription)
           throws Exception {
     Map<String, Object> tuples = Maps.newLinkedHashMap();
-    tuples.put(AbstractPhase.QA_INTERNAL_PHASEID, new Integer(phase));
+    tuples.put(BasePhase.QA_INTERNAL_PHASEID, new Integer(phase));
     tuples.put(EXPERIMENT_UUID_PROPERTY, experimentUuid);
     tuples.put(STAGE_ID_PROPERTY, stageId);
     Class<? extends AnalysisComponent> ac = getFromClassOrInherit(aeDescription,
@@ -247,15 +247,14 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
     return annotators.toArray(new AnalysisEngine[0]);
   }
-
+  
   public static <T extends Resource> List<T> createResourceList(List<Map<String, String>> names, 
           Class<T> type) {
     List<T> resources = Lists.newArrayList();
     for (Map<String, String> name : names) {
       try {
-        Map<String, Object> tuples = Maps.newLinkedHashMap();
         ResourceHandle handle = buildHandleFromMap(name);
-        resources.add(buildResource(handle, tuples, type));
+        resources.add(buildResource(handle, type));
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -263,7 +262,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     return resources;
   }
   
-  private static <T extends Resource> T buildResource(ResourceHandle handle, Map<String, Object> tuples, Class<T> type) throws Exception {
+  public static <T extends Resource> T buildResource(ResourceHandle handle, Class<T> type) throws Exception {
+    Map<String, Object> tuples = Maps.newLinkedHashMap();
     Class<? extends Resource> resourceClass = loadFromClassOrInherit(handle, Resource.class,
             tuples);
     return buildResource(resourceClass, tuples, type);
@@ -377,7 +377,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     return ResourceHandle.newHandle(values[0], values[1]);
   }
 
-  private static ResourceHandle buildHandleFromMap(Map<String, String> map) {
+  public static ResourceHandle buildHandleFromMap(Map<String, String> map) {
     Map.Entry<String, String> name = Iterators.get(map.entrySet().iterator(), 0);
     return ResourceHandle.newHandle(name.getKey(), name.getValue());
   }
@@ -468,9 +468,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     List<T> resources = Lists.newArrayList();
     for (String name : names) {
       try {
-        Map<String, Object> tuples = Maps.newLinkedHashMap();
         ResourceHandle handle = buildHandleFromString(name);
-        resources.add(buildResource(handle, tuples, type));
+        resources.add(buildResource(handle, type));
       } catch (Exception e) {
         e.printStackTrace();
       }

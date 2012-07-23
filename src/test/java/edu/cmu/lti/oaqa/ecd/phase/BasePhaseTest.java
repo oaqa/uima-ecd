@@ -31,8 +31,6 @@ import org.junit.Test;
 import org.uimafit.factory.TypeSystemDescriptionFactory;
 
 import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
-import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
-import edu.cmu.lti.oaqa.ecd.config.ConfigurationLoader;
 import edu.cmu.lti.oaqa.ecd.config.Stage;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfigurationImpl;
 
@@ -74,8 +72,8 @@ public class BasePhaseTest {
       AnalysisEngineDescription aed = builder.buildComponent(stage.getId(), i + 1,
           phaseDescription);
       if (aed.getImplementationName().equalsIgnoreCase(
-          AbstractPhase.class.getName())) {
-        AbstractPhase bp = new BasePhase();
+          BasePhase.class.getName())) {
+        BasePhase bp = new BasePhase();
         String optDescr = (String) aed.getAnalysisEngineMetaData()
                 .getConfigurationParameterSettings().getParameterValue("options");
         List<AnalysisEngineDescription> options = bp.loadOptions(optDescr);

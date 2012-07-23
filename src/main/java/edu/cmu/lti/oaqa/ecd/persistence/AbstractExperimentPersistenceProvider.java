@@ -14,11 +14,12 @@
  *  limitations under the License.
  */
 
-package edu.cmu.lti.oaqa.ecd;
+package edu.cmu.lti.oaqa.ecd.persistence;
 
-import org.apache.uima.resource.Resource;
+import org.apache.uima.resource.Resource_ImplBase;
 
-public interface PersistenceProvider extends Resource {
-  void insertExperiment(final String id, final String name, final String author,
-          final String configuration, final String resource) throws Exception;
+import edu.cmu.lti.oaqa.ecd.ExperimentPersistenceProvider;
+
+public abstract class AbstractExperimentPersistenceProvider extends Resource_ImplBase implements ExperimentPersistenceProvider {
+
 }
