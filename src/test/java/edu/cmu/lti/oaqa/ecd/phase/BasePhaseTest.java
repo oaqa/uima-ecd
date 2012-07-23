@@ -54,7 +54,7 @@ public class BasePhaseTest {
   @Test
   public void testStagedPhaseAllocation() throws Exception {
     String resource = "test.partial-ecd-example";
-    int[] sizes = new int[] {3, 4, 3};
+    int[] sizes = new int[] {3, 4, 2};
     testPipeline(resource, sizes);
   }
   

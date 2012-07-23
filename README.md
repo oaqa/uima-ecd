@@ -55,7 +55,6 @@ pipeline:
     options: |
       - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorA1
       - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorB1
-      - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorC1
 
   - inherit: ecd.phase
     name: third-phase  

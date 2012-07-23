@@ -30,8 +30,7 @@ stages:
         name: second-phase  
         options: | 
           - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorA1
-          - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorB1
-          - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorC1  
+          - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorB1 
     
     post-process:         
       - inherit: funnel.funnel-consumer  
