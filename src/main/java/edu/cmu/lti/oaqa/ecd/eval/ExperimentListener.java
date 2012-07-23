@@ -14,9 +14,12 @@
  *  limitations under the License.
  */
 
-package edu.cmu.lti.oaqa.ecd.phase;
+package edu.cmu.lti.oaqa.ecd.eval;
 
-interface CasDeserializer {
+import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
+import org.apache.uima.resource.Resource;
+
+public interface ExperimentListener extends Resource {
   
-  boolean processedCas();
+  void process(ExperimentKey experiment) throws AnalysisEngineProcessException;
 }

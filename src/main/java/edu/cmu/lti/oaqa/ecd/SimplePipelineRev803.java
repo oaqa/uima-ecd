@@ -248,7 +248,7 @@ public final class SimplePipelineRev803 {
   /**
    * Notify a set of {@link AnalysisEngine analysis engines} that the collection process is complete.
    */
-  static void collectionProcessComplete(final AnalysisEngine... engines)
+  public static void collectionProcessComplete(final AnalysisEngine... engines)
       throws AnalysisEngineProcessException {
     for (AnalysisEngine e : engines) {
       e.collectionProcessComplete();
@@ -258,7 +258,7 @@ public final class SimplePipelineRev803 {
   /**
    * Destroy a set of {@link Resource resources}.
    */
-  static void destroy(final Resource... resources)
+  public static void destroy(final Resource... resources)
   {
     for (Resource r : resources) {
       if (r != null) {

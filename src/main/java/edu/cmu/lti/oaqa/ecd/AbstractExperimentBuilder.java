@@ -436,7 +436,7 @@ public abstract class AbstractExperimentBuilder implements ExperimentBuilder {
       Yaml yaml = new Yaml();
       @SuppressWarnings("unchecked")
       List<Map<String, String>> ao = (List<Map<String, String>>) yaml.load(description);
-      resources = AbstractExperimentBuilder.createResourceList(ao, type);
+      resources = createResourceList(ao, type);
     } else {
       // TODO: Remove this deprecated call at some point in time
       String[] expListenerNames = (String[]) o;
