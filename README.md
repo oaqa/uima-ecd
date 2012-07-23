@@ -14,11 +14,9 @@ An ECD can have the following sections:
 
 Resources within a pipeline are specified using either an inherit or a class mapping:
 
- - inherit: will look for a file WITHIN the classpath on the path specified by the doted syntax a.b.c => a/b/c 
-            inherited properties can be overridden directly on the body of the declaration
+ - inherit: will look for a file WITHIN the classpath on the path specified by the doted syntax a.b.c => a/b/c. Inherited properties can be overridden directly on the body of the declaration
 
- - class: will look for a class on the classpath, and is intended as a shortcut for classes that don't have 
-          configurable parameters
+ - class: will look for a class on the classpath, and is intended as a shortcut for classes that don't have configurable parameters
 
 The resources are configured by specifiying primitive parameters (Integer, Float, Long, Double, Boolean, String). Compound parameters are typically passed as Strings and parsed within the resource, this is usually the case of nested Resources.  
 
@@ -28,6 +26,7 @@ Parameters within a phase can have additional combinatorial options.
 
 Components that need to collect information form the different all the experimental options are specified at the end of the pipeline on the post-process section.
 
+```
 # Non-staged example
 
 experiment:
@@ -62,5 +61,6 @@ post-process:
   - inherit: report.csv-report-generator
     builders: |
       - inherit: report.f-measure-report-component 
+```
 
 A final note on YAML syntax, indentation is relevant to determine nesting of elements, and some characters  are reserved (-,:) so use quotes "" to use them on strings
