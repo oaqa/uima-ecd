@@ -16,7 +16,14 @@
 
 package edu.cmu.lti.oaqa.ecd.persistence;
 
+import java.sql.SQLException;
+
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
+
+import edu.cmu.lti.oaqa.ecd.eval.ExperimentKey;
 import edu.cmu.lti.oaqa.ecd.eval.Key;
+import edu.cmu.lti.oaqa.ecd.eval.retrieval.FMeasureEvaluationData;
 import edu.cmu.lti.oaqa.ecd.eval.retrieval.RetrievalCounts;
 
 public class DefaultRetrievalEvalPersistenceProvider extends
@@ -29,9 +36,28 @@ public class DefaultRetrievalEvalPersistenceProvider extends
   }
 
   @Override
-  public void deletePassageAggrEval(Key key, int sequenceId) throws Exception {
+  public void deletePassageAggrEval(Key key, int sequenceId) {
     // TODO Auto-generated method stub
 
+  }
+
+  @Override
+  public void deleteFMeasureEval(ExperimentKey experiment) {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public void insertFMeasureEval(Key key, String eName, FMeasureEvaluationData eval)
+          throws SQLException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public Multimap<Key, RetrievalCounts> retrievePartialCounts(ExperimentKey experiment) {
+    // TODO Auto-generated method stub
+    return LinkedHashMultimap.create();
   }
 
 }

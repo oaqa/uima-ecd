@@ -384,6 +384,11 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     return ae;
   }
 
+  public static <T> T createFromName(String name, Class<T> type) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    Class<? extends T> clazz = Class.forName(name).asSubclass(type);
+    return clazz.newInstance();
+  }
+
   private static ResourceHandle buildHandleFromString(String name) {
     String[] values = name.split("!");
     return ResourceHandle.newHandle(values[0], values[1]);

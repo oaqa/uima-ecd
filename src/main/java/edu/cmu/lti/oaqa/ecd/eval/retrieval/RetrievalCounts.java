@@ -42,7 +42,7 @@ public final class RetrievalCounts {
 		this.binaryRelevant = binaryRelevant;
 	}
 
-	public void update(RetrievalCounts other) {
+	void update(RetrievalCounts other) {
 		relevantRetrieved += other.relevantRetrieved;
 		retrieved += other.retrieved;
 		relevant += other.relevant;

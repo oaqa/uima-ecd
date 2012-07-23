@@ -16,12 +16,23 @@
 
 package edu.cmu.lti.oaqa.ecd.eval.retrieval;
 
+import java.sql.SQLException;
+
 import org.apache.uima.resource.Resource;
 
+import com.google.common.collect.Multimap;
+
+import edu.cmu.lti.oaqa.ecd.eval.ExperimentKey;
 import edu.cmu.lti.oaqa.ecd.eval.Key;
 
 public interface RetrievalEvalPersistenceProvider extends Resource {
   void insertPartialCounts(Key key, int sequenceId, RetrievalCounts counts) throws Exception;
 
-  void deletePassageAggrEval(Key key, int sequenceId) throws Exception;
+  void deletePassageAggrEval(Key key, int sequenceId);
+  
+  void deleteFMeasureEval(ExperimentKey experiment);
+  
+  void insertFMeasureEval(Key key, String eName, FMeasureEvaluationData eval) throws SQLException; 
+  
+  Multimap<Key, RetrievalCounts> retrievePartialCounts(ExperimentKey experiment);
 }
