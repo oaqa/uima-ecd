@@ -224,6 +224,18 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
   }
 
+  public static <T extends Resource> T loadPersistenceProvider(String provider, Class<T> type) throws ResourceInitializationException {
+    Yaml yaml = new Yaml();
+    @SuppressWarnings("unchecked")
+    Map<String, String> map = (Map<String, String>) yaml.load(provider);
+    ResourceHandle handle = buildHandleFromMap(map);
+    try {
+      return buildResource(handle, type);
+    } catch (Exception e) {
+      throw new ResourceInitializationException(e);
+    }
+  }
+
   public static AnalysisEngine[] createAnnotators(String description, UimaContext c) {
     Yaml yaml = new Yaml();
     @SuppressWarnings("unchecked")

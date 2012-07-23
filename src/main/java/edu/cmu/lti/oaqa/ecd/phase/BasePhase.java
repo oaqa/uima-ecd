@@ -93,7 +93,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     if (pp == null) {
       throw new ResourceInitializationException(new IllegalArgumentException("Must provide a parameter of type <persistence-provider>"));
     }
-    this.persistence = loadPersistenceProvider(pp);
+    this.persistence = BaseExperimentBuilder.loadPersistenceProvider(pp, PhasePersistenceProvider.class);
     this.phaseName = (String) ctx.getConfigParameterValue("name");
     this.phaseNo = (Integer) ctx.getConfigParameterValue(QA_INTERNAL_PHASEID);
     System.out.println("Phase: " + toString());
@@ -264,18 +264,6 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     return aes.toArray(new AnalysisEngine[0]);
   }
   
-  private PhasePersistenceProvider loadPersistenceProvider(String provider) throws ResourceInitializationException {
-    Yaml yaml = new Yaml();
-    @SuppressWarnings("unchecked")
-    Map<String, String> map = (Map<String, String>) yaml.load(provider);
-    ResourceHandle handle = BaseExperimentBuilder.buildHandleFromMap(map);
-    try {
-      return BaseExperimentBuilder.buildResource(handle, PhasePersistenceProvider.class);
-    } catch (Exception e) {
-      throw new ResourceInitializationException(e);
-    }
-  }
-
   List<AnalysisEngineDescription> loadOptions(String options) {
     List<AnalysisEngineDescription> aeds = new ArrayList<AnalysisEngineDescription>();
     Yaml yaml = new Yaml();
