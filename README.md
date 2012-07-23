@@ -26,7 +26,7 @@ Parameters within a phase can have additional combinatorial options.
 
 Components that need to collect information form the different all the experimental options are specified at the end of the pipeline on the post-process section.
 
-```yaml
+```
 # Non-staged example
 
 experiment:
