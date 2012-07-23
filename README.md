@@ -10,7 +10,7 @@ An ECD must have the following sections:
  - collection-reader
  - pipeline
  
- The following sections are optional:
+The following sections are optional:
  
  - post-process
 
@@ -35,8 +35,11 @@ experiment:
   name: test-experiment
   author: junit
   
+persistence-provider:
+  inherit: ecd.default-experiment-persistence-provider
+  
 collection-reader:
-  inherit: test.collection-reader  
+  inherit: test.collection-reader 
   
 pipeline:
   - inherit: ecd.phase
@@ -44,10 +47,8 @@ pipeline:
     options: |
       - inherit: test.first-phase-annotator-a
       - class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1 
-      - pipeline: 
-        - class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1
-        - inherit: test.first-phase-annotator-copts
-        - pipeline: [inherit: test.first-phase-annotator-a, inherit: test.first-phase-annotator-copts2]  
+      - pipeline: [class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1, inherit: test.first-phase-annotator-copts, pipeline: [inherit: test.first-phase-annotator-a, inherit: test.first-phase-annotator-copts2]]  
+     
       
   - inherit: ecd.phase
     name: second-phase  
@@ -59,13 +60,7 @@ pipeline:
   - inherit: ecd.phase
     name: third-phase  
     options: |
-      - inherit: test.third-phase-annotator
-
-post-process: 
-  - inherit: eval.retrieval-measures-evaluator
-  - inherit: report.csv-report-generator
-    builders: |
-      - inherit: report.f-measure-report-component 
+      - inherit: test.third-phase-annotator 
 ```
 
 A final note on YAML syntax, indentation is relevant to determine nesting of elements, and some characters  are reserved (```-,:```) so use quotes ```""``` to use them on strings
