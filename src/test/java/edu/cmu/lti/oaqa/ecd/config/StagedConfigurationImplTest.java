@@ -35,56 +35,58 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class StagedConfigurationImplTest {
-  
+
   @Test
   public void stagedPipelineIsValid() throws IOException {
-    AnyObject conf = ConfigurationLoader.load("test.staged-ecd-example"); 
+    AnyObject conf = ConfigurationLoader.load("test.staged-ecd-example");
     StagedConfigurationImpl staged = new StagedConfigurationImpl(conf);
     Iterator<Stage> it = staged.iterator();
     List<Stage> list = Lists.newArrayList(it);
     assertThat(list.size(), is(equalTo(2)));
   }
-  
+
   @Test
   public void stagedConfigsAreCorrect() throws IOException {
-    AnyObject conf = ConfigurationLoader.load("test.staged-ecd-example"); 
+    AnyObject conf = ConfigurationLoader.load("test.staged-ecd-example");
     StagedConfigurationImpl staged = new StagedConfigurationImpl(conf);
-    int[] sizes = new int[] {4,6};
+    int[] sizes = new int[] { 4, 6 };
     int i = 0;
     for (Stage stage : staged) {
-      validateConfiguration(stage.getConfiguration(), sizes[i++]);
+      validateConfiguration(stage.getConfiguration(), new String[] { "experiment",
+          "persistence-provider", "pipeline", "post-process" }, sizes[i++]);
     }
   }
-  
+
   @Test
   public void nonStagedPipelineIsValid() throws IOException {
-    AnyObject conf = ConfigurationLoader.load("test.nonstaged-ecd-example"); 
+    AnyObject conf = ConfigurationLoader.load("test.nonstaged-ecd-example");
     StagedConfigurationImpl staged = new StagedConfigurationImpl(conf);
     Iterator<Stage> it = staged.iterator();
     List<Stage> list = Lists.newArrayList(it);
-    assertThat(list.size(), is(equalTo(1))); 
+    assertThat(list.size(), is(equalTo(1)));
   }
 
   @Test
   public void nonStagedConfigIsCorrect() throws IOException {
-    AnyObject conf = ConfigurationLoader.load("test.nonstaged-ecd-example"); 
+    AnyObject conf = ConfigurationLoader.load("test.nonstaged-ecd-example");
     StagedConfigurationImpl staged = new StagedConfigurationImpl(conf);
-    int[] sizes = new int[] {3};
+    int[] sizes = new int[] { 3 };
     int i = 0;
     for (Stage stage : staged) {
-      validateConfiguration(stage.getConfiguration(), sizes[i++]);
+      validateConfiguration(stage.getConfiguration(), new String[] { "experiment", "pipeline",
+          "post-process" }, sizes[i++]);
     }
   }
-  
-  private void validateConfiguration(AnyObject config, int pipelineSize) {
+
+  private void validateConfiguration(AnyObject config, String[] elements, int pipelineSize) {
     Set<String> keys = Sets.newHashSet();
     for (AnyTuple tuple : config.getTuples()) {
       keys.add(tuple.getKey());
     }
-    assertThat(keys.size(), is(equalTo(3)));
-    assertThat(keys, hasItems("experiment", "pipeline", "post-process"));
+    assertThat(keys.size(), is(equalTo(elements.length)));
+    assertThat(keys, hasItems(elements));
     List<Object> pipeline = Lists.newArrayList(config.getIterable("pipeline"));
     assertThat(pipeline.size(), is(equalTo(pipelineSize)));
   }
-  
+
 }

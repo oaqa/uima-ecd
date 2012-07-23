@@ -30,7 +30,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.Test;
 import org.uimafit.factory.TypeSystemDescriptionFactory;
 
-import edu.cmu.lti.oaqa.ecd.AbstractExperimentBuilder;
+import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.config.ConfigurationLoader;
 import edu.cmu.lti.oaqa.ecd.config.Stage;
@@ -61,10 +61,10 @@ public class BasePhaseTest {
   }
   
   private void testPipeline(String resource, int[] sizes) throws Exception {
-    AnyObject conf = ConfigurationLoader.load(resource);    
     String uuid = UUID.randomUUID().toString();
     TypeSystemDescription typeSystem = TypeSystemDescriptionFactory.createTypeSystemDescription();
-    AbstractExperimentBuilder builder = new BaseExperimentBuilder(uuid, typeSystem);
+    BaseExperimentBuilder builder = new BaseExperimentBuilder(uuid, resource, typeSystem);
+    AnyObject conf = builder.getConfiguration();    
     StagedConfigurationImpl staged = new StagedConfigurationImpl(conf);
     Stage stage = staged.iterator().next();
     AnyObject stageConf = stage.getConfiguration();

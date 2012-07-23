@@ -58,7 +58,7 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
-import edu.cmu.lti.oaqa.ecd.AbstractExperimentBuilder;
+import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.CasUtils;
 import edu.cmu.lti.oaqa.ecd.ResourceHandle;
 import edu.cmu.lti.oaqa.ecd.ResourceHandle.HandleType;
@@ -91,7 +91,7 @@ public abstract class AbstractPhase extends JCasMultiplier_ImplBase {
     this.phaseNo = (Integer) ctx.getConfigParameterValue(QA_INTERNAL_PHASEID);
     System.out.println("Phase: " + toString());
     String experimentId = (String) ctx
-            .getConfigParameterValue(AbstractExperimentBuilder.EXPERIMENT_UUID_PROPERTY);
+            .getConfigParameterValue(BaseExperimentBuilder.EXPERIMENT_UUID_PROPERTY);
     String optDescr = (String) ctx.getConfigParameterValue("options");
     this.options = loadOptions(optDescr, ctx);
     for (AnalysisEngine ae : options) {
@@ -99,7 +99,7 @@ public abstract class AbstractPhase extends JCasMultiplier_ImplBase {
     }
     System.out.println(" Total # of options configured: " + size());
 
-    int stageId = (Integer) ctx.getConfigParameterValue(AbstractExperimentBuilder.STAGE_ID_PROPERTY);
+    int stageId = (Integer) ctx.getConfigParameterValue(BaseExperimentBuilder.STAGE_ID_PROPERTY);
     insertExperimentMeta(experimentId, phaseNo, stageId, size());
     nextAnnotator = 0;
   }
@@ -370,11 +370,11 @@ public abstract class AbstractPhase extends JCasMultiplier_ImplBase {
   private List<AnalysisEngineDescription> doLoadOptions(ResourceHandle handle) throws Exception {
     List<AnalysisEngineDescription> aes = Lists.newArrayList();
     Map<String, Object> tuples = Maps.newLinkedHashMap();
-    Class<? extends AnalysisComponent> comp = AbstractExperimentBuilder.loadFromClassOrInherit(handle,
+    Class<? extends AnalysisComponent> comp = BaseExperimentBuilder.loadFromClassOrInherit(handle,
             AnalysisComponent.class, tuples);
     AnyObject crossOpts = (AnyObject) tuples.remove(CROSS_OPTS_PARAM);
     if (crossOpts == null) {
-      AnalysisEngineDescription aeDesc = AbstractExperimentBuilder.createAnalysisEngineDescription(
+      AnalysisEngineDescription aeDesc = BaseExperimentBuilder.createAnalysisEngineDescription(
               tuples, comp);
       aes.add(aeDesc);
     } else {
@@ -382,7 +382,7 @@ public abstract class AbstractPhase extends JCasMultiplier_ImplBase {
       for (List<String> configuration : product) {
         Map<String, Object> inner = Maps.newLinkedHashMap(tuples);
         setInnerParams(configuration, inner);
-        AnalysisEngineDescription aeDesc = AbstractExperimentBuilder.createAnalysisEngineDescription(
+        AnalysisEngineDescription aeDesc = BaseExperimentBuilder.createAnalysisEngineDescription(
                 inner, comp);
         aes.add(aeDesc);
       }

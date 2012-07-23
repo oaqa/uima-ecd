@@ -40,6 +40,9 @@ experiment:
   name: test-experiment
   author: junit
   
+persistence-provider:
+  inherit: ecd.default-provider
+  
 stages:
   - stage:
     pipeline:

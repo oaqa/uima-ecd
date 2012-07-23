@@ -39,5 +39,5 @@ public interface ExperimentBuilder {
 
   <T extends Resource> T initializeResource(AnyObject config, String node, Class<T> type) throws Exception;
 
-  void insertExperiment(AnyObject config, String resource) throws Exception;
+  AnyObject getConfiguration();
 }
