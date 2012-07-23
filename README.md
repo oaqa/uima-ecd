@@ -63,4 +63,4 @@ post-process:
       - inherit: report.f-measure-report-component 
 ```
 
-A final note on YAML syntax, indentation is relevant to determine nesting of elements, and some characters  are reserved (-,:) so use quotes "" to use them on strings
+A final note on YAML syntax, indentation is relevant to determine nesting of elements, and some characters  are reserved (```-,:```) so use quotes ```""``` to use them on strings
