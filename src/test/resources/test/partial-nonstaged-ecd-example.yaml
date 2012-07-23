@@ -2,9 +2,12 @@ experiment:
   name: test-experiment
   author: junit
   
+persistence-provider:
+  inherit: ecd.default-experiment-persistence-provider
+  
 collection-reader:
-  inherit: test.collection-reader
-
+  inherit: test.collection-reader 
+  
 pipeline:
   - inherit: ecd.phase
     name: first-phase
@@ -25,9 +28,3 @@ pipeline:
     name: third-phase  
     options: |
       - inherit: test.third-phase-annotator
-
-post-process: 
-  - inherit: eval.retrieval-measures-evaluator
-  - inherit: report.csv-report-generator
-    builders: |
-      - inherit: report.f-measure-report-component 

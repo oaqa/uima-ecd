@@ -5,11 +5,13 @@ Experiment Configuration Description for UIMA pipelines.
 
 The Experiment Configuration Description (ECD) is a set of capabilities built on top of [UIMA](http://uima.apache.org/) and [uimaFIT](http://code.google.com/p/uimafit/), that allows the creation of UIMA pipelines form a configuration file.
 
-
-An ECD can have the following sections:
+An ECD must have the following sections:
  - experiment
  - collection-reader
  - pipeline
+ 
+ The following sections are optional:
+ 
  - post-process
 
 Resources within a pipeline are specified using either an inherit or a class mapping:
@@ -18,9 +20,9 @@ Resources within a pipeline are specified using either an inherit or a class map
 
  - class: will look for a class on the classpath, and is intended as a shortcut for classes that don't have configurable parameters
 
-The resources are configured by specifiying primitive parameters (```Integer, Float, Long, Double, Boolean, String```). Compound parameters are typically passed as Strings and parsed within the resource, this is usually the case of nested Resources.  
+The resources are configured by specifying primitive parameters (```Integer, Float, Long, Double, Boolean, String```). Compound parameters are typically passed as Strings and parsed within the resource, this is usually the case of nested Resources.  
 
-A pipeline is typically a sequence of phases that inherit from ecd.phase (```edu.cmu.lti.oaqa.ecd.phase.BasePhase```), or some of its sub-classes. A phase provides all the combinatorial functionality required for experimentation, but any arbitrary AnalysisEngine or CasConsumer can be inserted at any point in the pipleline.
+A pipeline is typically a sequence of phases that inherit from ecd.phase (```edu.cmu.lti.oaqa.ecd.phase.BasePhase```), or some of its sub-classes. A phase provides all the combinatorial functionality required for experimentation, but any arbitrary AnalysisEngine or CasConsumer can be inserted at any point in the pipeline.
 
 Parameters within a phase can have additional combinatorial options.
 
@@ -32,6 +34,9 @@ Components that need to collect information form the different all the experimen
 experiment:
   name: test-experiment
   author: junit
+  
+collection-reader:
+  inherit: test.collection-reader  
   
 pipeline:
   - inherit: ecd.phase

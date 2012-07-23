@@ -43,6 +43,9 @@ experiment:
 persistence-provider:
   inherit: ecd.default-experiment-persistence-provider
   
+collection-reader:
+  inherit: test.collection-reader 
+  
 stages:
   - stage:
     pipeline:
@@ -93,8 +96,6 @@ stages:
       - inherit: eval.base-retrieval-evaluator
       
       - inherit: eval.trace-consumer
-        listeners: |
-          - inherit: eval.example-trace-listener
 
     post-process: 
       - inherit: eval.retrieval-measures-evaluator

@@ -52,7 +52,7 @@ public class StagedConfigurationImplTest {
     int[] sizes = new int[] { 4, 6 };
     int i = 0;
     for (Stage stage : staged) {
-      validateConfiguration(stage.getConfiguration(), new String[] { "experiment",
+      validateConfiguration(stage.getConfiguration(), new String[] { "experiment", "collection-reader",
           "persistence-provider", "pipeline", "post-process" }, sizes[i++]);
     }
   }
@@ -73,7 +73,7 @@ public class StagedConfigurationImplTest {
     int[] sizes = new int[] { 3 };
     int i = 0;
     for (Stage stage : staged) {
-      validateConfiguration(stage.getConfiguration(), new String[] { "experiment", "pipeline",
+      validateConfiguration(stage.getConfiguration(), new String[] { "experiment", "collection-reader", "pipeline",
           "post-process" }, sizes[i++]);
     }
   }
