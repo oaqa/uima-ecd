@@ -1,4 +1,4 @@
-package edu.cmu.lti.oaqa.ecd;
+package edu.cmu.lti.oaqa.ecd.util;
 
 
 import org.apache.uima.cas.FSIterator;

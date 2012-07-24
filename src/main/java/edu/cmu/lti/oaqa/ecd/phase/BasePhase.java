@@ -59,9 +59,9 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
 import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
-import edu.cmu.lti.oaqa.ecd.CasUtils;
 import edu.cmu.lti.oaqa.ecd.ResourceHandle;
 import edu.cmu.lti.oaqa.ecd.ResourceHandle.HandleType;
+import edu.cmu.lti.oaqa.ecd.util.CasUtils;
 import edu.cmu.lti.oaqa.framework.types.ExperimentUUID;
 import edu.cmu.lti.oaqa.framework.types.InputElement;
 import edu.cmu.lti.oaqa.framework.types.ProcessingStep;

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package edu.cmu.lti.oaqa.ecd;
+package edu.cmu.lti.oaqa.ecd.flow;
 
 import java.io.IOException;
 import java.net.URL;
@@ -51,7 +51,6 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.InvalidXMLException;
 import org.apache.uima.util.XMLInputSource;
 
-import edu.cmu.lti.oaqa.ecd.config.FunneledFlow;
 import edu.cmu.lti.oaqa.ecd.phase.ProcessingStepUtils;
 import edu.cmu.lti.oaqa.ecd.phase.Trace;
 import edu.cmu.lti.oaqa.framework.types.ProcessingStep;

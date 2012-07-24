@@ -8,8 +8,7 @@ import org.apache.uima.analysis_engine.metadata.impl.FixedFlow_impl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import edu.cmu.lti.oaqa.ecd.config.FunneledFlow;
-import edu.cmu.lti.oaqa.ecd.config.ProcessingStrategy;
+import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
 import edu.cmu.lti.oaqa.ecd.phase.Trace;
 
 final class DefaultProcessingStrategy implements ProcessingStrategy {

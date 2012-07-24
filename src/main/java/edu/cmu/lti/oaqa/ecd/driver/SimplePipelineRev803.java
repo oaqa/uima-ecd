@@ -15,7 +15,7 @@
  limitations under the License.
  */
 
-package edu.cmu.lti.oaqa.ecd;
+package edu.cmu.lti.oaqa.ecd.driver;
 
 import static java.util.Arrays.asList;
 import static org.uimafit.factory.AnalysisEngineFactory.createAggregate;

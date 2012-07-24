@@ -31,12 +31,10 @@ import com.google.common.collect.Lists;
 
 import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.ExperimentBuilder;
-import edu.cmu.lti.oaqa.ecd.SimplePipelineRev803;
-import edu.cmu.lti.oaqa.ecd.config.FunneledFlow;
-import edu.cmu.lti.oaqa.ecd.config.ProcessingStrategy;
 import edu.cmu.lti.oaqa.ecd.config.Stage;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfiguration;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfigurationImpl;
+import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
 
 public final class ECDDriver {
 

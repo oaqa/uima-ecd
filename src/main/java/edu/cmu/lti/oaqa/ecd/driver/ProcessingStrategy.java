@@ -14,14 +14,12 @@
  *  limitations under the License.
  */
 
-package edu.cmu.lti.oaqa.ecd.config;
+package edu.cmu.lti.oaqa.ecd.driver;
 
-import org.apache.uima.analysis_engine.metadata.FixedFlow;
+import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
 
-import edu.cmu.lti.oaqa.ecd.phase.Trace;
 
-public interface FunneledFlow extends FixedFlow {
+public interface ProcessingStrategy {
 
- boolean funnel(Trace trace);
-
+  FunneledFlow newFunnelStrategy(String experimentUuid);
 }
