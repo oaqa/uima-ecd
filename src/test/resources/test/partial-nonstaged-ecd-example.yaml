@@ -6,7 +6,7 @@ persistence-provider:
   inherit: ecd.default-experiment-persistence-provider
   
 collection-reader:
-  inherit: test.collection-reader 
+  inherit: test.collection.reader 
   
 pipeline:
   - inherit: ecd.phase
@@ -27,3 +27,8 @@ pipeline:
     name: third-phase  
     options: |
       - inherit: test.third-phase-annotator
+
+  - inherit: test.eval.retrieval-aggregator-consumer
+  
+post-process: 
+  - inherit: test.eval.retrieval-evaluator-consumer

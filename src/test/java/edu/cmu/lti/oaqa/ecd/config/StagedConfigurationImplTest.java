@@ -70,7 +70,7 @@ public class StagedConfigurationImplTest {
   public void nonStagedConfigIsCorrect() throws IOException {
     AnyObject conf = ConfigurationLoader.load("test.nonstaged-ecd-example");
     StagedConfigurationImpl staged = new StagedConfigurationImpl(conf);
-    int[] sizes = new int[] { 3 };
+    int[] sizes = new int[] { 4 };
     int i = 0;
     for (Stage stage : staged) {
       validateConfiguration(stage.getConfiguration(), new String[] { "experiment", "collection-reader", "pipeline",

@@ -3,7 +3,7 @@ experiment:
   author: junit
   
 collection-reader:
-  inherit: test.collection-reader
+  inherit: test.collection.reader
 
 pipeline:
   - inherit: ecd.phase
@@ -13,7 +13,6 @@ pipeline:
       - class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1 
       - pipeline: [class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1, inherit: test.first-phase-annotator-copts, pipeline: [inherit: test.first-phase-annotator-a, inherit: test.first-phase-annotator-copts2]]  
      
-      
   - inherit: ecd.phase
     name: second-phase  
     options: |
@@ -26,8 +25,10 @@ pipeline:
     options: |
       - inherit: test.third-phase-annotator
 
+  - inherit: test.eval.retrieval-aggregator-consumer
+
 post-process: 
-  - inherit: eval.retrieval-measures-evaluator
+  - inherit: test.eval.retrieval-evaluator-consumer
   - inherit: report.csv-report-generator
     builders: |
       - inherit: report.f-measure-report-component 

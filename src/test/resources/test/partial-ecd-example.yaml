@@ -3,7 +3,7 @@ experiment:
   author: junit
   
 collection-reader:
-  inherit: test.collection-reader
+  inherit: test.collection.reader
   
 stages:
   - stage:
@@ -31,7 +31,10 @@ stages:
         options: | 
           - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorA1
           - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorB1 
-    
+
+      - inherit: test.eval.retrieval-aggregator-consumer
+        scope: STAGE
+            
     post-process:         
       - inherit: funnel.funnel-consumer  
     
@@ -42,4 +45,7 @@ stages:
         options: |
           - inherit: test.third-phase-annotator
           
-      - inherit: eval.trace-consumer
+      - inherit: eval.trace-consumer    
+
+    post-process:       
+      - inherit: test.eval.retrieval-evaluator-consumer

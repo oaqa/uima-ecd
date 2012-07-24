@@ -44,7 +44,7 @@ persistence-provider:
   inherit: ecd.default-experiment-persistence-provider
   
 collection-reader:
-  inherit: test.collection-reader 
+  inherit: test.collection.reader 
   
 stages:
   - stage:
@@ -74,14 +74,11 @@ stages:
           - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorB1
           - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorC1
       
-      - inherit: eval.base-retrieval-aggregator
+      - inherit: test.eval.retrieval-aggregator-consumer
         scope: STAGE
         
     post-process: 
-      - inherit: eval.retrieval-measures-evaluator
-      - inherit: report.csv-report-generator
-        builders: |
-          - inherit: report.f-measure-report-component          
+      - inherit: eval.retrieval-measures-evaluator         
       - inherit: funnel.funnel-consumer
         experiment-listeners: |       
           - inherit: funnel.retrieval-measures-00-map-threshold
@@ -93,12 +90,12 @@ stages:
         options: |
           - inherit: test.third-phase-annotator
       
-      - inherit: eval.base-retrieval-evaluator
+      - inherit: test.eval.retrieval-aggregator-consumer
       
       - inherit: eval.trace-consumer
 
     post-process: 
-      - inherit: eval.retrieval-measures-evaluator
+      - inherit: test.eval.retrieval-evaluator-consumer
       - inherit: report.csv-report-generator
         builders: |
           - inherit: report.f-measure-report-component
