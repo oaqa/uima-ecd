@@ -62,4 +62,6 @@ pipeline:
       - inherit: test.third-phase-annotator 
 ```
 
-A final note on YAML syntax, indentation is relevant to determine nesting of elements, and some characters  are reserved (```-,:```) so use quotes ```""``` to use them on strings
+A final note, on YAML syntax indentation is relevant to determine nesting of elements, and some characters are reserved (```-,:```) so use quotes ```""``` to use them on strings.
+
+This module is part of the Open Advancement of Question Answering ([OAQA](https://mu.lti.cs.cmu.edu/trac/oaqa2.0)) project.
