@@ -24,7 +24,7 @@
 	</licenses>
 
 	<scm>
-		<url>git@github.com:oaqa/uima-ecd.gitt</url>
+		<url>git@github.com:oaqa/uima-ecd.git</url>
 		<connection>scm:git:git@github.com:oaqa/uima-ecd.git</connection>
 		<developerConnection>scm:git:git@github.com:oaqa/uima-ecd.git</developerConnection>
 	</scm>
