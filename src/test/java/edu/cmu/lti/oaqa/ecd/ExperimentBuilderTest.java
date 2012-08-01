@@ -28,7 +28,7 @@ import edu.cmu.lti.oaqa.ecd.config.Stage;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfigurationImpl;
 
 public class ExperimentBuilderTest {
- 
+
   private static ExperimentBuilder setupExperimentBuilder(String resource) throws Exception {
     String uuid = UUID.randomUUID().toString();
     TypeSystemDescription typeSystem = TypeSystemDescriptionFactory.createTypeSystemDescription();
@@ -44,14 +44,14 @@ public class ExperimentBuilderTest {
   public void testSetupStagedPipeline() throws Exception {
     testPipelineSetup("test.partial-ecd-example");
   }
-  
+
   void testPipelineSetup(String resource) throws Exception {
     ExperimentBuilder builder = setupExperimentBuilder(resource);
     AnyObject conf = builder.getConfiguration();
     StagedConfigurationImpl staged = new StagedConfigurationImpl(conf);
-    Stage stage = staged.iterator().next();
-    builder.buildPipeline(stage.getConfiguration(), "pipeline",
-            stage.getId(), null);
+    for (Stage stage : staged) {
+      builder.buildPipeline(stage.getConfiguration(), "pipeline", stage.getId(), null);
+    }
   }
 
 }
