@@ -237,7 +237,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
   }
 
-  public static AnalysisEngine[] createAnnotators(String description, UimaContext c) {
+  public static AnalysisEngine[] createAnnotators(String description) {
     Yaml yaml = new Yaml();
     @SuppressWarnings("unchecked")
     List<Map<String, String>> names = (List<Map<String, String>>) yaml.load(description);
@@ -251,8 +251,6 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
         Object[] params = getParamList(tuples);
         AnalysisEngineDescription aeDesc = AnalysisEngineFactory.createPrimitiveDescription(
                 aClass, params);
-        JCasAnnotator_ImplBase annotator = aClass.newInstance();
-        annotator.initialize(c);
         annotators.add(UIMAFramework.produceAnalysisEngine(aeDesc));
       } catch (Exception e) {
         e.printStackTrace();

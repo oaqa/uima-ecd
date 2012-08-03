@@ -52,7 +52,7 @@ public final class ExampleCollectionReader extends CollectionReader_ImplBase {
     this.total = (Integer) getConfigParameterValue("total");
     String decoratorsNames = (String) getConfigParameterValue("decorators");
     if (decoratorsNames != null) {
-      this.decorators = BaseExperimentBuilder.createAnnotators(decoratorsNames, getUimaContext());
+      this.decorators = BaseExperimentBuilder.createAnnotators(decoratorsNames);
     }
   }
   
