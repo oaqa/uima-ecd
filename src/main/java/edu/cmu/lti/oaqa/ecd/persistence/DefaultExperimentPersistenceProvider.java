@@ -17,8 +17,15 @@
 package edu.cmu.lti.oaqa.ecd.persistence;
 
 public final class DefaultExperimentPersistenceProvider extends AbstractExperimentPersistenceProvider {
+  
+  @Override
   public void insertExperiment(String id, String name, String author,
           String configuration, String resource) throws Exception {
     // Do nothing
-  } 
+  }
+
+  @Override
+  public void updateExperimentMeta(String experimentId, int size) {
+    // Do nothing
+  }
 }
