@@ -32,7 +32,7 @@ public class ResourceHandle {
 
   private ResourceHandle(HandleType type, String resource) {
     this.type = type;
-    this.resource = resource;
+    this.resource = resource.trim();
   }
 
   public static ResourceHandle newInheritHandle(String resource) {
