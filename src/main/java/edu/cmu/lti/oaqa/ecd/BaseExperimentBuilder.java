@@ -366,7 +366,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     if (params.length > 0) {
       appendMethodSignature(sb, tuples);
     }
-    aeDesc.getAnalysisEngineMetaData().setName(sb.toString());
+    String name = sb.toString().replaceAll("\n", " ").trim();
+    aeDesc.getAnalysisEngineMetaData().setName(name);
     return aeDesc;
 
   }
