@@ -32,7 +32,7 @@ stages:
           - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorA1
           - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorB1 
 
-      - inherit: test.eval.retrieval-aggregator-consumer
+      - inherit: eval.trace-consumer
         scope: STAGE
             
     post-process:         
@@ -46,6 +46,3 @@ stages:
           - inherit: test.third-phase-annotator
           
       - inherit: eval.trace-consumer    
-
-    post-process:       
-      - inherit: test.eval.retrieval-evaluator-consumer

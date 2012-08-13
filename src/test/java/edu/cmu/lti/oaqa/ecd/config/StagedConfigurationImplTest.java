@@ -49,7 +49,7 @@ public class StagedConfigurationImplTest {
   public void stagedConfigsAreCorrect() throws IOException {
     AnyObject conf = ConfigurationLoader.load("test.staged-ecd-example");
     StagedConfigurationImpl staged = new StagedConfigurationImpl(conf);
-    int[] sizes = new int[] { 4, 6 };
+    int[] sizes = new int[] { 4, 5 };
     int i = 0;
     for (Stage stage : staged) {
       validateConfiguration(stage.getConfiguration(), new String[] { "experiment", "collection-reader",
@@ -70,11 +70,10 @@ public class StagedConfigurationImplTest {
   public void nonStagedConfigIsCorrect() throws IOException {
     AnyObject conf = ConfigurationLoader.load("test.nonstaged-ecd-example");
     StagedConfigurationImpl staged = new StagedConfigurationImpl(conf);
-    int[] sizes = new int[] { 4 };
+    int[] sizes = new int[] { 3 };
     int i = 0;
     for (Stage stage : staged) {
-      validateConfiguration(stage.getConfiguration(), new String[] { "experiment", "collection-reader", "pipeline",
-          "post-process" }, sizes[i++]);
+      validateConfiguration(stage.getConfiguration(), new String[] { "experiment", "collection-reader", "pipeline" }, sizes[i++]);
     }
   }
 

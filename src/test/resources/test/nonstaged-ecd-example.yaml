@@ -24,11 +24,3 @@ pipeline:
     name: third-phase  
     options: |
       - inherit: test.third-phase-annotator
-
-  - inherit: test.eval.retrieval-aggregator-consumer
-
-post-process: 
-  - inherit: test.eval.retrieval-evaluator-consumer
-  - inherit: report.csv-report-generator
-    builders: |
-      - inherit: report.f-measure-report-component 
