@@ -117,8 +117,12 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   @Override
   public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId)
           throws Exception {
-    return buildPipeline(config, pipeline, stageId, null, false);
-  }
+    try {
+      return buildPipeline(config, pipeline, stageId, null, false);
+    } catch (Exception e) {
+      throw new Exception(String.format("Error loading configuration for %s pipeline at stage %s", pipeline, stageId), e);
+    }
+  } 
 
   @Override
   public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId,

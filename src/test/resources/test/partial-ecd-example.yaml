@@ -32,11 +32,11 @@ stages:
           - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorA1
           - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorB1 
 
-      - inherit: eval.trace-consumer
+      - inherit: test.eval.example-consumer
         scope: STAGE
             
     post-process:         
-      - inherit: funnel.funnel-consumer  
+      - inherit: test.eval.example-consumer  
     
   - stage:
     pipeline:
@@ -45,4 +45,4 @@ stages:
         options: |
           - inherit: test.third-phase-annotator
           
-      - inherit: eval.trace-consumer    
+      - inherit: test.eval.example-consumer    
