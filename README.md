@@ -1,9 +1,9 @@
 uima-ecd
 ========
 
-Experiment Configuration Description for UIMA pipelines. 
+Extended Configuration Description for UIMA pipelines. 
 
-The Experiment Configuration Description (ECD) is a set of capabilities built on top of [UIMA](http://uima.apache.org/) and [uimaFIT](http://code.google.com/p/uimafit/), that allows the creation of UIMA pipelines form a configuration file.
+The Extended Configuration Description (ECD) module, is a set of capabilities built on top of [UIMA](http://uima.apache.org/) and [uimaFIT](http://code.google.com/p/uimafit/), that allows the creation of declarative UIMA pipelines form a configuration file.
 
 An ECD must have the following sections:
  - experiment
