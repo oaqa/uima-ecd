@@ -43,6 +43,9 @@ configuration:
 persistence-provider:
   inherit: ecd.default-experiment-persistence-provider
   
+processing-strategy:
+  class: edu.cmu.lti.oaqa.ecd.driver.strategy.DefaultProcessingStrategy  
+  
 collection-reader:
   inherit: test.collection.reader 
   

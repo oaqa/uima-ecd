@@ -50,6 +50,7 @@ import org.yaml.snakeyaml.Yaml;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -229,11 +230,21 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
   }
 
-  public static <T extends Resource> T loadPersistenceProvider(String provider, Class<T> type) throws ResourceInitializationException {
+  public static <T extends Resource> T loadProvider(String provider, Class<T> type) throws ResourceInitializationException {
     Yaml yaml = new Yaml();
     @SuppressWarnings("unchecked")
     Map<String, String> map = (Map<String, String>) yaml.load(provider);
     ResourceHandle handle = buildHandleFromMap(map);
+    try {
+      return buildResource(handle, type);
+    } catch (Exception e) {
+      throw new ResourceInitializationException(e);
+    }
+  }
+
+
+  public static <T extends Resource> T loadProvider(AnyObject ao, Class<T> type) throws ResourceInitializationException {
+    ResourceHandle handle = buildHandleFromObject(ao);
     try {
       return buildResource(handle, type);
     } catch (Exception e) {
@@ -401,6 +412,11 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   public static ResourceHandle buildHandleFromMap(Map<String, String> map) {
     Map.Entry<String, String> name = Iterators.get(map.entrySet().iterator(), 0);
     return ResourceHandle.newHandle(name.getKey(), name.getValue());
+  }
+  
+  public static ResourceHandle buildHandleFromObject(AnyObject object) {
+    AnyTuple name = Iterables.get(object.getTuples(), 0);
+    return ResourceHandle.newHandle(name.getKey(), (String) name.getObject());
   }
 
   private static void appendMethodSignature(StringBuilder sb, Map<String, Object> tuples) {

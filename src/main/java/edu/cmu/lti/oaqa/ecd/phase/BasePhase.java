@@ -93,7 +93,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     if (pp == null) {
       throw new ResourceInitializationException(new IllegalArgumentException("Must provide a parameter of type <persistence-provider>"));
     }
-    this.persistence = BaseExperimentBuilder.loadPersistenceProvider(pp, PhasePersistenceProvider.class);
+    this.persistence = BaseExperimentBuilder.loadProvider(pp, PhasePersistenceProvider.class);
     this.phaseName = (String) ctx.getConfigParameterValue("name");
     this.phaseNo = (Integer) ctx.getConfigParameterValue(QA_INTERNAL_PHASEID);
     System.out.println("Phase: " + toString());

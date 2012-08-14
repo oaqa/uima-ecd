@@ -52,7 +52,7 @@ public class StagedConfigurationImplTest {
     int[] sizes = new int[] { 4, 5 };
     int i = 0;
     for (Stage stage : staged) {
-      validateConfiguration(stage.getConfiguration(), new String[] { "configuration", "collection-reader",
+      validateConfiguration(stage.getConfiguration(), new String[] { "configuration", "processing-strategy", "collection-reader",
           "persistence-provider", "pipeline", "post-process" }, sizes[i++]);
     }
   }

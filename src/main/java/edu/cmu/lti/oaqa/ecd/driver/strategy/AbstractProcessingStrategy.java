@@ -14,12 +14,10 @@
  *  limitations under the License.
  */
 
-package edu.cmu.lti.oaqa.ecd.driver;
+package edu.cmu.lti.oaqa.ecd.driver.strategy;
 
-import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
+import org.apache.uima.resource.Resource_ImplBase;
 
+public abstract class AbstractProcessingStrategy extends Resource_ImplBase implements ProcessingStrategy {
 
-public interface ProcessingStrategy {
-
-  FunneledFlow newFunnelStrategy(String experimentUuid);
 }

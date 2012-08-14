@@ -17,12 +17,14 @@
 package edu.cmu.lti.oaqa.ecd.driver;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import mx.bigdata.anyobject.AnyObject;
 
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.collection.CollectionReader;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.Progress;
 import org.uimafit.factory.TypeSystemDescriptionFactory;
@@ -34,6 +36,8 @@ import edu.cmu.lti.oaqa.ecd.ExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.config.Stage;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfiguration;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfigurationImpl;
+import edu.cmu.lti.oaqa.ecd.driver.strategy.DefaultProcessingStrategy;
+import edu.cmu.lti.oaqa.ecd.driver.strategy.ProcessingStrategy;
 import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
 
 public final class ECDDriver {
@@ -50,10 +54,9 @@ public final class ECDDriver {
     this.config = builder.getConfiguration();
   }
 
-
   void run() throws Exception {
     StagedConfiguration stagedConfig = new StagedConfigurationImpl(config);
-    ProcessingStrategy ps = new DefaultProcessingStrategy();
+    ProcessingStrategy ps = getProcessingStrategy();
     for (Stage stage : stagedConfig) {
       FunneledFlow funnel = ps.newFunnelStrategy(builder.getExperimentUuid());
       AnyObject conf = stage.getConfiguration();
@@ -69,6 +72,15 @@ public final class ECDDriver {
       long total = progress.getCompleted();
       processedItems.add(total);
     }
+  }
+  
+  private ProcessingStrategy getProcessingStrategy() throws ResourceInitializationException {
+    ProcessingStrategy ps = new DefaultProcessingStrategy();
+    AnyObject map = config.getAnyObject("processing-strategy");
+    if (map != null) {
+      ps = BaseExperimentBuilder.loadProvider(map, ProcessingStrategy.class);
+    }
+    return ps;
   }
   
   Iterable<Long> getProcessedItems() {

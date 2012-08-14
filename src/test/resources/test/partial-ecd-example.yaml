@@ -2,6 +2,9 @@ configuration:
   name: test-experiment
   author: junit
   
+processing-strategy:
+  class: edu.cmu.lti.oaqa.ecd.driver.strategy.DefaultProcessingStrategy
+
 collection-reader:
   inherit: test.collection.reader
   
