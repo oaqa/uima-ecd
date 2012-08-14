@@ -55,4 +55,9 @@ public class ResourceHandle {
   HandleType getType() {
     return type;
   }
+  
+  @Override
+  public String toString() {
+    return String.format("%s[%s]", type.toString().toLowerCase(), resource);
+  }
 }

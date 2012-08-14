@@ -49,6 +49,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -74,12 +75,13 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   private final TypeSystemDescription typeSystem;
 
   private final String experimentUuid;
-  
+
   private final AnyObject configuration;
-  
+
   private final ExperimentPersistenceProvider persistence;
 
-  public BaseExperimentBuilder(String experimentUuid, String resource, TypeSystemDescription typeSystem) throws Exception {
+  public BaseExperimentBuilder(String experimentUuid, String resource,
+          TypeSystemDescription typeSystem) throws Exception {
     this.typeSystem = typeSystem;
     this.experimentUuid = experimentUuid;
     this.configuration = ConfigurationLoader.load(resource);
@@ -87,19 +89,26 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     insertExperiment(configuration, resource);
   }
 
-  private ExperimentPersistenceProvider newPersistenceProvider(AnyObject config) throws Exception {
+  private ExperimentPersistenceProvider newPersistenceProvider(AnyObject config)
+          throws ResourceInitializationException {
     AnyObject pprovider = config.getAnyObject("persistence-provider");
     if (pprovider == null) {
       return new DefaultExperimentPersistenceProvider();
     }
-    return initializeResource(config, "persistence-provider", ExperimentPersistenceProvider.class); 
+    try {
+      return initializeResource(config, "persistence-provider", ExperimentPersistenceProvider.class);
+    } catch (Exception e) {
+      throw new ResourceInitializationException(
+              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
+                  "persistence-provider", config }, e);
+    }
   }
-  
+
   @Override
   public String getExperimentUuid() {
     return experimentUuid;
   }
-  
+
   @Override
   public AnyObject getConfiguration() {
     return configuration;
@@ -121,14 +130,23 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     try {
       return buildPipeline(config, pipeline, stageId, null, false);
     } catch (Exception e) {
-      throw new Exception(String.format("Error loading configuration for %s pipeline at stage %s", pipeline, stageId), e);
+      throw new ResourceInitializationException(
+              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
+                  pipeline, config }, e);
     }
-  } 
+  }
 
   @Override
   public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId,
           FixedFlow funnel) throws Exception {
-    return buildPipeline(config, pipeline, stageId, funnel, false);
+    try {
+      return buildPipeline(config, pipeline, stageId, funnel, false);
+    } catch (Exception e) {
+      Throwables.propagateIfInstanceOf(e, ResourceInitializationException.class);
+      throw new ResourceInitializationException(
+              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
+                  pipeline, config }, e);
+    }
   }
 
   @Override
@@ -178,8 +196,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   }
 
   @Override
-  public CollectionReader buildCollectionReader(AnyObject config, int stageId)
-          throws Exception {
+  public CollectionReader buildCollectionReader(AnyObject config, int stageId) throws Exception {
     AnyObject descriptor = config.getAnyObject("collection-reader");
     Map<String, Object> tuples = Maps.newLinkedHashMap();
     tuples.put(EXPERIMENT_UUID_PROPERTY, experimentUuid);
@@ -191,7 +208,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
             typeSystem, params);
     return reader;
   }
-  
+
   @Override
   public <T extends Resource> T initializeResource(AnyObject config, String node, Class<T> type)
           throws Exception {
@@ -200,8 +217,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
       return null;
     }
     Map<String, Object> tuples = Maps.newLinkedHashMap();
-    Class<? extends Resource> cseClass = getFromClassOrInherit(descriptor,
-            Resource.class, tuples);
+    Class<? extends Resource> cseClass = getFromClassOrInherit(descriptor, Resource.class, tuples);
     return buildResource(cseClass, tuples, type);
   }
 
@@ -209,8 +225,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     AnyObject experiment = config.getAnyObject("configuration");
     String name = experiment.getString("name");
     String author = experiment.getString("author");
-    persistence.insertExperiment(getExperimentUuid(), name, author, ConfigurationLoader.getString(resource),
-            resource);
+    persistence.insertExperiment(getExperimentUuid(), name, author,
+            ConfigurationLoader.getString(resource), resource);
   }
 
   private <C> C buildFromClassOrInherit(AnyObject descriptor, Class<C> ifaceClass) throws Exception {
@@ -230,7 +246,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
   }
 
-  public static <T extends Resource> T loadProvider(String provider, Class<T> type) throws ResourceInitializationException {
+  public static <T extends Resource> T loadProvider(String provider, Class<T> type)
+          throws ResourceInitializationException {
     Yaml yaml = new Yaml();
     @SuppressWarnings("unchecked")
     Map<String, String> map = (Map<String, String>) yaml.load(provider);
@@ -238,17 +255,21 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     try {
       return buildResource(handle, type);
     } catch (Exception e) {
-      throw new ResourceInitializationException(e);
+      throw new ResourceInitializationException(
+              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
+                  type.getCanonicalName(), provider }, e);
     }
   }
 
-
-  public static <T extends Resource> T loadProvider(AnyObject ao, Class<T> type) throws ResourceInitializationException {
+  public static <T extends Resource> T loadProvider(AnyObject ao, Class<T> type)
+          throws ResourceInitializationException {
     ResourceHandle handle = buildHandleFromObject(ao);
     try {
       return buildResource(handle, type);
     } catch (Exception e) {
-      throw new ResourceInitializationException(e);
+      throw new ResourceInitializationException(
+              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
+                  type.getCanonicalName(), ao }, e);
     }
   }
 
@@ -264,8 +285,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
         Class<? extends JCasAnnotator_ImplBase> aClass = loadFromClassOrInherit(handle,
                 JCasAnnotator_ImplBase.class, tuples);
         Object[] params = getParamList(tuples);
-        AnalysisEngineDescription aeDesc = AnalysisEngineFactory.createPrimitiveDescription(
-                aClass, params);
+        AnalysisEngineDescription aeDesc = AnalysisEngineFactory.createPrimitiveDescription(aClass,
+                params);
         annotators.add(UIMAFramework.produceAnalysisEngine(aeDesc));
       } catch (Exception e) {
         e.printStackTrace();
@@ -273,8 +294,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
     return annotators.toArray(new AnalysisEngine[0]);
   }
-  
-  public static <T extends Resource> List<T> createResourceList(List<Map<String, String>> names, 
+
+  public static <T extends Resource> List<T> createResourceList(List<Map<String, String>> names,
           Class<T> type) {
     List<T> resources = Lists.newArrayList();
     for (Map<String, String> name : names) {
@@ -282,20 +303,29 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
         ResourceHandle handle = buildHandleFromMap(name);
         resources.add(buildResource(handle, type));
       } catch (Exception e) {
-        e.printStackTrace();
+        System.err.printf("[ERROR] %s Caused by:\n", e);
+        Throwables.getRootCause(e).printStackTrace();
       }
     }
     return resources;
   }
-  
-  public static <T extends Resource> T buildResource(ResourceHandle handle, Class<T> type) throws Exception {
+
+  public static <T extends Resource> T buildResource(ResourceHandle handle, Class<T> type)
+          throws ResourceInitializationException {
     Map<String, Object> tuples = Maps.newLinkedHashMap();
-    Class<? extends Resource> resourceClass = loadFromClassOrInherit(handle, Resource.class,
-            tuples);
-    return buildResource(resourceClass, tuples, type);
-  }  
-  
-  private static <T extends Resource> T buildResource(Class<? extends Resource> resourceClass, Map<String, Object> tuples, Class<T> type) throws Exception {
+    try {
+      Class<? extends Resource> resourceClass = loadFromClassOrInherit(handle, Resource.class,
+              tuples);
+      return buildResource(resourceClass, tuples, type);
+    } catch (Exception e) {
+      throw new ResourceInitializationException(
+              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
+                  type.getCanonicalName(), handle }, e);
+    }
+  }
+
+  private static <T extends Resource> T buildResource(Class<? extends Resource> resourceClass,
+          Map<String, Object> tuples, Class<T> type) throws Exception {
     CustomResourceSpecifier spec = new CustomResourceSpecifier_impl();
     spec.setResourceClassName(resourceClass.getName());
     Resource resource = UIMAFramework.produceResource(spec, tuples);
@@ -399,7 +429,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     return ae;
   }
 
-  public static <T> T createFromName(String name, Class<T> type) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+  public static <T> T createFromName(String name, Class<T> type) throws ClassNotFoundException,
+          InstantiationException, IllegalAccessException {
     Class<? extends T> clazz = Class.forName(name).asSubclass(type);
     return clazz.newInstance();
   }
@@ -413,7 +444,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     Map.Entry<String, String> name = Iterators.get(map.entrySet().iterator(), 0);
     return ResourceHandle.newHandle(name.getKey(), name.getValue());
   }
-  
+
   public static ResourceHandle buildHandleFromObject(AnyObject object) {
     AnyTuple name = Iterables.get(object.getTuples(), 0);
     return ResourceHandle.newHandle(name.getKey(), (String) name.getObject());
@@ -481,7 +512,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
     return ae;
   }
-  
+
   public static <T extends Resource> List<T> createResourceList(Object o, Class<T> type) {
     List<T> resources = null;
     if (o instanceof String) {
@@ -500,7 +531,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
 
   @Deprecated
   private static <T extends Resource> List<T> createResourceList(String[] names, Class<T> type) {
-    System.err.println("The bang syntax (!) for resource creation is deprecated please use the string (|) syntax instead: 'parameter: |\\n - [inherit|class]: fully.qualified.name'");
+    System.err
+            .println("The bang syntax (!) for resource creation is deprecated please use the string (|) syntax instead: 'parameter: |\\n - [inherit|class]: fully.qualified.name'");
     System.err.println(" Offending configuration: " + Arrays.toString(names));
     List<T> resources = Lists.newArrayList();
     for (String name : names) {
