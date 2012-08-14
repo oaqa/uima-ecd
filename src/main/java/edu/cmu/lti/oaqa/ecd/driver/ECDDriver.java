@@ -17,7 +17,6 @@
 package edu.cmu.lti.oaqa.ecd.driver;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import mx.bigdata.anyobject.AnyObject;
