@@ -289,7 +289,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
                 params);
         annotators.add(UIMAFramework.produceAnalysisEngine(aeDesc));
       } catch (Exception e) {
-        e.printStackTrace();
+        System.err.printf("[ERROR] %s Caused by:\n", e);
+        Throwables.getRootCause(e).printStackTrace();
       }
     }
     return annotators.toArray(new AnalysisEngine[0]);
