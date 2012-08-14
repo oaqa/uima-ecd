@@ -6,7 +6,7 @@ Extended Configuration Description for UIMA pipelines.
 The Extended Configuration Description (ECD) module, is a set of capabilities built on top of [UIMA](http://uima.apache.org/) and [uimaFIT](http://code.google.com/p/uimafit/), that allows the creation of declarative UIMA pipelines form a configuration file.
 
 An ECD must have the following sections:
- - experiment
+ - configuration
  - collection-reader
  - pipeline
  
@@ -31,7 +31,7 @@ Components that need to collect information form the different all the experimen
 ```
 # Non-staged example
 
-experiment:
+configuration:
   name: test-experiment
   author: junit
   

@@ -1,5 +1,5 @@
-experiment:
-  name: base-pase-test
+configuration:
+  name: base-phase-test
   author: junit
 
 pipeline:

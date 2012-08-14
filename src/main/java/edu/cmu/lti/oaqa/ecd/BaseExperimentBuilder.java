@@ -205,7 +205,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   }
 
   private void insertExperiment(AnyObject config, String resource) throws Exception {
-    AnyObject experiment = config.getAnyObject("experiment");
+    AnyObject experiment = config.getAnyObject("configuration");
     String name = experiment.getString("name");
     String author = experiment.getString("author");
     persistence.insertExperiment(getExperimentUuid(), name, author, ConfigurationLoader.getString(resource),

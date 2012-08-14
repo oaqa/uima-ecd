@@ -1,4 +1,4 @@
-experiment:
+configuration:
   name: test-experiment
   author: junit
   

@@ -1,5 +1,5 @@
-experiment:
-  name: base-pase-test
+configuration:
+  name: cross-opts-test
   author: junit
 
 pipeline:

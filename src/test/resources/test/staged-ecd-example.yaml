@@ -1,4 +1,4 @@
-# Experiment Configuration Descriptor
+# Extended Configuration Descriptor
 
 # The following sections are required: 
 # experiment, collection-reader, pipeline and post-process
@@ -36,7 +36,7 @@
 # determine nesting of elements and some characters 
 # are reserved (-,:) so use quotes "" to use them on strings
 
-experiment:
+configuration:
   name: test-experiment
   author: junit
   
