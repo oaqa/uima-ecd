@@ -16,10 +16,9 @@
 
 package edu.cmu.lti.oaqa.ecd.persistence;
 
-import org.apache.uima.resource.Resource_ImplBase;
-
+import edu.cmu.lti.oaqa.ecd.config.ConfigurableProvider;
 import edu.cmu.lti.oaqa.ecd.log.LogPersistenceProvider;
 
-public abstract class AbstractLogPersistenceProvider extends Resource_ImplBase implements LogPersistenceProvider {
+public abstract class AbstractLogPersistenceProvider extends ConfigurableProvider implements LogPersistenceProvider {
 
 }

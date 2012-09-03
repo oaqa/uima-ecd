@@ -16,8 +16,8 @@
 
 package edu.cmu.lti.oaqa.ecd.driver.strategy;
 
-import org.apache.uima.resource.Resource_ImplBase;
+import edu.cmu.lti.oaqa.ecd.config.ConfigurableProvider;
 
-public abstract class AbstractProcessingStrategy extends Resource_ImplBase implements ProcessingStrategy {
+public abstract class AbstractProcessingStrategy extends ConfigurableProvider implements ProcessingStrategy {
 
 }

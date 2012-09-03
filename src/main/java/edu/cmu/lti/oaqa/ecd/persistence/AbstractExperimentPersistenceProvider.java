@@ -16,10 +16,9 @@
 
 package edu.cmu.lti.oaqa.ecd.persistence;
 
-import org.apache.uima.resource.Resource_ImplBase;
-
 import edu.cmu.lti.oaqa.ecd.ExperimentPersistenceProvider;
+import edu.cmu.lti.oaqa.ecd.config.ConfigurableProvider;
 
-public abstract class AbstractExperimentPersistenceProvider extends Resource_ImplBase implements ExperimentPersistenceProvider {
+public abstract class AbstractExperimentPersistenceProvider extends ConfigurableProvider implements ExperimentPersistenceProvider {
 
 }
