@@ -24,6 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPOutputStream;
 
 import mx.bigdata.anyobject.AnyObject;
@@ -69,6 +75,7 @@ import edu.cmu.lti.oaqa.framework.types.ProcessingStep;
 // The superclass also adds this annotation, we just want to be explicit about doing it
 @OperationalProperties(outputsNewCases = true)
 public final class BasePhase extends JCasMultiplier_ImplBase {
+  private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
   public static final String QA_INTERNAL_PHASEID = "__.qa.internal.phaseid.__";
 
@@ -83,7 +90,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
   private Integer phaseNo;
 
   private String phaseName;
-  
+
   private PhasePersistenceProvider persistence;
 
   @Override
@@ -91,7 +98,8 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     super.initialize(ctx);
     String pp = (String) ctx.getConfigParameterValue("persistence-provider");
     if (pp == null) {
-      throw new ResourceInitializationException(new IllegalArgumentException("Must provide a parameter of type <persistence-provider>"));
+      throw new ResourceInitializationException(new IllegalArgumentException(
+              "Must provide a parameter of type <persistence-provider>"));
     }
     this.persistence = BaseExperimentBuilder.loadProvider(pp, PhasePersistenceProvider.class);
     this.phaseName = (String) ctx.getConfigParameterValue("name");
@@ -149,31 +157,48 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
       if (!loadCasFromStorage(nextCas, trace, sequenceId)) {
         process(ae, nextCas, prevCasId, prevTrace, optionId, sequenceId, trace);
       }
-      nextAnnotator++;
+      nextAnnotator++; //TODO:Should this be in a final
       return nextCas;
     } catch (Exception e) {
-      nextCas.release();
       throw new AnalysisEngineProcessException(e);
     }
   }
 
-  private void process(AnalysisEngine ae, JCas nextCas, String prevCasId, Trace prevTrace,
+  private void process(final AnalysisEngine ae, JCas nextCas, String prevCasId, Trace prevTrace,
           String optionId, int sequenceId, Trace trace) throws IOException, SAXException, Exception {
     long a = System.currentTimeMillis();
     final String uuid = ProcessingStepUtils.getCurrentExperimentId(nextCas);
     final String key = getExecutionHash(uuid, trace, sequenceId);
     insertExecutionTrace(nextCas, optionId, a, prevCasId, trace, key);
     System.out.printf("[%s] Executing option: %s on trace %s\n", sequenceId, optionId, prevTrace);
+
+    final WrappedJCas wrapped = new WrappedJCas(nextCas);
     try {
-      ae.process(nextCas); // Process the next option
+      Future<?> future = executor.submit(new Callable<Object>() {
+        @Override
+        public Object call() throws Exception {
+          ae.process(wrapped); // Process the next option
+          return null;
+        }
+
+      });
+      future.get(15, TimeUnit.MINUTES);
       long b = System.currentTimeMillis();
       updateTrace(nextCas, optionId, key);
       storeCas(nextCas, b, key);
       System.out.printf("[%s]  Execution time for option %s: %ss\n", sequenceId, optionId,
               (b - a) / 1000);
-    } catch (Exception e) {
+    } catch (TimeoutException e) {
+      wrapped.invalidate();
       long b = System.currentTimeMillis();
-      storeException(nextCas, b, e, key);
+      storeException(b, e, key, ExecutionStatus.TIMEOUT);
+      System.out.printf("[%s]  Execution timed out for option: %s after %ss\n", sequenceId,
+              optionId, (b - a) / 1000);
+      throw e; // Re-throw exception to allow the Flow controller do its job
+    } catch (Exception e) {
+      nextCas.release();
+      long b = System.currentTimeMillis();
+      storeException(b, e, key, ExecutionStatus.FAILURE);
       System.out.printf("[%s]  Execution failed for option: %s after %ss\n", sequenceId, optionId,
               (b - a) / 1000);
       throw e; // Re-throw exception to allow the Flow controller do its job
@@ -199,7 +224,8 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     InputElement input = (InputElement) CasUtils.getFirst(jcas, InputElement.class.getName());
     final String dataset = input.getDataset();
     final int sequenceId = input.getSequenceId();
-    persistence.insertExecutionTrace(optionId, sequenceId, dataset, getPhaseNo(), uuid, startTime, getHostName(), trace.getTrace(), key);
+    persistence.insertExecutionTrace(optionId, sequenceId, dataset, getPhaseNo(), uuid, startTime,
+            getHostName(), trace.getTrace(), key);
   }
 
   private void storeCas(JCas jcas, final long endTime, final String key) throws IOException,
@@ -212,14 +238,14 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     persistence.storeCas(bytes, ExecutionStatus.SUCCESS, endTime, key);
   }
 
-  private void storeException(JCas jcas, final long endTime, Exception e, final String key)
-          throws IOException, SAXException {
+  private void storeException(final long endTime, Exception e, final String key,
+          ExecutionStatus status) throws IOException, SAXException {
     Throwable rootCause = Throwables.getRootCause(e);
     String rootCauseString = Throwables.getStackTraceAsString(rootCause);
     final byte[] bytes = rootCauseString.getBytes("UTF8");
-    persistence.storeException(bytes, ExecutionStatus.FAILURE, endTime, key);
+    persistence.storeException(bytes, status, endTime, key);
   }
-  
+
   private boolean loadCasFromStorage(JCas jcas, Trace trace, int sequenceId) throws SQLException {
     ExperimentUUID experiment = ProcessingStepUtils.getCurrentExperiment(jcas);
     String experimentId = experiment.getUuid();
@@ -234,7 +260,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     }
     return deserializer.processedCas();
   }
-  
+
   private String getExecutionHash(String experimentId, final Trace trace, int sequenceId) {
     HashFunction hf = Hashing.md5();
     Hasher hasher = hf.newHasher();
@@ -263,7 +289,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     }
     return aes.toArray(new AnalysisEngine[0]);
   }
-  
+
   List<AnalysisEngineDescription> loadOptions(String options) {
     List<AnalysisEngineDescription> aeds = new ArrayList<AnalysisEngineDescription>();
     Yaml yaml = new Yaml();
