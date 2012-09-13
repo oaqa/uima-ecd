@@ -157,7 +157,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
       if (!loadCasFromStorage(nextCas, trace, sequenceId)) {
         process(ae, nextCas, prevCasId, prevTrace, optionId, sequenceId, trace);
       }
-      nextAnnotator++; //TODO:Should this be in a final
+      nextAnnotator++; // TODO:Should this be in a final
       return nextCas;
     } catch (Exception e) {
       throw new AnalysisEngineProcessException(e);
@@ -167,20 +167,18 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
   private void process(final AnalysisEngine ae, JCas nextCas, String prevCasId, Trace prevTrace,
           String optionId, int sequenceId, Trace trace) throws IOException, SAXException, Exception {
     long a = System.currentTimeMillis();
+    final WrappedJCas wrapped = new WrappedJCas(nextCas);
     final String uuid = ProcessingStepUtils.getCurrentExperimentId(nextCas);
     final String key = getExecutionHash(uuid, trace, sequenceId);
-    insertExecutionTrace(nextCas, optionId, a, prevCasId, trace, key);
-    System.out.printf("[%s] Executing option: %s on trace %s\n", sequenceId, optionId, prevTrace);
-
-    final WrappedJCas wrapped = new WrappedJCas(nextCas);
     try {
+      insertExecutionTrace(nextCas, optionId, a, prevCasId, trace, key);
+      System.out.printf("[%s] Executing option: %s on trace %s\n", sequenceId, optionId, prevTrace);
       Future<?> future = executor.submit(new Callable<Object>() {
         @Override
         public Object call() throws Exception {
           ae.process(wrapped); // Process the next option
           return null;
         }
-
       });
       future.get(15, TimeUnit.MINUTES);
       long b = System.currentTimeMillis();
@@ -196,11 +194,11 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
               optionId, (b - a) / 1000);
       throw e; // Re-throw exception to allow the Flow controller do its job
     } catch (Exception e) {
-      nextCas.release();
       long b = System.currentTimeMillis();
       storeException(b, e, key, ExecutionStatus.FAILURE);
       System.out.printf("[%s]  Execution failed for option: %s after %ss\n", sequenceId, optionId,
               (b - a) / 1000);
+      nextCas.release();
       throw e; // Re-throw exception to allow the Flow controller do its job
     }
   }

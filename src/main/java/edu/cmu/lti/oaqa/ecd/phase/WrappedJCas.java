@@ -46,6 +46,7 @@ class WrappedJCas implements JCas {
   }
 
   void invalidate() {
+    // TODO: This is one of the places where we hacked the solution
     delegate.getCasImpl().enableReset(true);
     delegate.release();
     this.alive = false;
@@ -65,349 +66,349 @@ class WrappedJCas implements JCas {
 
   @Override
   public FSIndexRepository getFSIndexRepository() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getFSIndexRepository();
   }
 
   @Override
   public LowLevelIndexRepository getLowLevelIndexRepository() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getLowLevelIndexRepository();
   }
 
   @Override
   public CAS getCas() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getCas();
   }
 
   @Override
   public CASImpl getCasImpl() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getCasImpl();
   }
 
   @Override
   public LowLevelCAS getLowLevelCas() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getLowLevelCas();
   }
 
   @Override
   public TOP_Type getType(int i) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getType(i);
   }
 
   @Override
   public Type getCasType(int i) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getCasType(i);
   }
 
   @Override
   @Deprecated
   public TOP_Type getType(TOP instance) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getType(instance);
   }
 
   @Override
   public Type getRequiredType(String s) throws CASException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getRequiredType(s);
   }
 
   @Override
   public Feature getRequiredFeature(Type t, String s) throws CASException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getRequiredFeature(t, s);
   }
 
   @Override
   public Feature getRequiredFeatureDE(Type t, String s, String rangeName, boolean featOkTst) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getRequiredFeatureDE(t, s, rangeName, featOkTst);
   }
 
   @Override
   public void putJfsFromCaddr(int casAddr, FeatureStructure fs) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     putJfsFromCaddr(casAddr, fs);
   }
 
   @Override
   public TOP getJfsFromCaddr(int casAddr) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getJfsFromCaddr(casAddr);
   }
 
   @Override
   public void checkArrayBounds(int fsRef, int pos) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     checkArrayBounds(fsRef, pos);
   }
 
   @Override
   public void throwFeatMissing(String feat, String type) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     throwFeatMissing(feat, type);
   }
 
   @Override
   @Deprecated
   public Sofa getSofa(SofaID sofaID) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getSofa();
   }
 
   @Override
   public Sofa getSofa() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getSofa();
   }
 
   @Override
   public JCas createView(String sofaID) throws CASException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.createView(sofaID);
   }
 
   @Override
   public JCas getJCas(Sofa sofa) throws CASException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getJCas(sofa);
   }
 
   @Override
   public JFSIndexRepository getJFSIndexRepository() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getJFSIndexRepository();
   }
 
   @Override
   public TOP getDocumentAnnotationFs() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getDocumentAnnotationFs();
   }
 
   @Override
   public StringArray getStringArray0L() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getStringArray0L();
   }
 
   @Override
   public IntegerArray getIntegerArray0L() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getIntegerArray0L();
   }
 
   @Override
   public FloatArray getFloatArray0L() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getFloatArray0L();
   }
 
   @Override
   public FSArray getFSArray0L() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getFSArray0L();
   }
 
   @Override
   @Deprecated
   public void processInit() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     processInit();
   }
 
   @Override
   public JCas getView(String localViewName) throws CASException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getView(localViewName);
   }
 
   @Override
   public JCas getView(SofaFS aSofa) throws CASException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getView(aSofa);
   }
 
   @Override
   public TypeSystem getTypeSystem() throws CASRuntimeException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getTypeSystem();
   }
 
   @Override
   @Deprecated
   public SofaFS createSofa(SofaID sofaID, String mimeType) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.createSofa(sofaID, mimeType);
   }
 
   @Override
   public FSIterator<SofaFS> getSofaIterator() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getSofaIterator();
   }
 
   @Override
   public <T extends FeatureStructure> FSIterator<T> createFilteredIterator(FSIterator<T> it,
           FSMatchConstraint cons) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.createFilteredIterator(it, cons);
   }
 
   @Override
   public ConstraintFactory getConstraintFactory() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getConstraintFactory();
   }
 
   @Override
   public FeaturePath createFeaturePath() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.createFeaturePath();
   }
 
   @Override
   public FSIndexRepository getIndexRepository() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getIndexRepository();
   }
 
   @Override
   public <T extends FeatureStructure> ListIterator<T> fs2listIterator(FSIterator<T> it) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.fs2listIterator(it);
   }
 
   @Override
   public void reset() throws CASAdminException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     delegate.reset();
   }
 
   @Override
   public String getViewName() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getViewName();
   }
 
   @Override
   public int size() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.size();
   }
 
   @Override
   public FeatureValuePath createFeatureValuePath(String featureValuePath)
           throws CASRuntimeException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.createFeatureValuePath(featureValuePath);
   }
 
   @Override
   public void setDocumentText(String text) throws CASRuntimeException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     delegate.setDocumentText(text);
   }
 
   @Override
   public void setSofaDataString(String text, String mimetype) throws CASRuntimeException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     delegate.setSofaDataString(text, mimetype);
   }
 
   @Override
   public String getDocumentText() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getDocumentText();
   }
 
   @Override
   public String getSofaDataString() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getSofaDataString();
   }
 
   @Override
   public void setDocumentLanguage(String languageCode) throws CASRuntimeException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     delegate.setDocumentLanguage(languageCode);
   }
 
   @Override
   public String getDocumentLanguage() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getDocumentLanguage();
   }
 
   @Override
   public void setSofaDataArray(FeatureStructure array, String mime) throws CASRuntimeException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     delegate.setSofaDataArray(array, mime);
   }
 
   @Override
   public FeatureStructure getSofaDataArray() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getSofaDataArray();
   }
 
   @Override
   public void setSofaDataURI(String uri, String mime) throws CASRuntimeException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     delegate.setSofaDataURI(uri, mime);
   }
 
   @Override
   public String getSofaDataURI() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getSofaDataURI();
   }
 
   @Override
   public InputStream getSofaDataStream() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getSofaDataStream();
   }
 
   @Override
   public String getSofaMimeType() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getSofaMimeType();
   }
 
   @Override
   public void addFsToIndexes(FeatureStructure fs) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     delegate.addFsToIndexes(fs);
   }
 
   @Override
   public void removeFsFromIndexes(FeatureStructure fs) {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     delegate.removeFsFromIndexes(fs);
   }
 
   @Override
   public AnnotationIndex<Annotation> getAnnotationIndex() {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getAnnotationIndex();
   }
 
   @Override
   public AnnotationIndex<Annotation> getAnnotationIndex(Type type) throws CASRuntimeException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getAnnotationIndex(type);
   }
 
   @Override
   public AnnotationIndex<Annotation> getAnnotationIndex(int type) throws CASRuntimeException {
-    testLiveness(); // TODO Auto-generated method stub
+    testLiveness(); 
     return delegate.getAnnotationIndex(type);
   }
 
