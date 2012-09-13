@@ -195,10 +195,13 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
       throw e; // Re-throw exception to allow the Flow controller do its job
     } catch (Exception e) {
       long b = System.currentTimeMillis();
-      storeException(b, e, key, ExecutionStatus.FAILURE);
-      System.out.printf("[%s]  Execution failed for option: %s after %ss\n", sequenceId, optionId,
-              (b - a) / 1000);
-      nextCas.release();
+      try {
+        storeException(b, e, key, ExecutionStatus.FAILURE);
+        System.out.printf("[%s]  Execution failed for option: %s after %ss\n", sequenceId,
+                optionId, (b - a) / 1000);
+      } finally {
+        nextCas.release();
+      }
       throw e; // Re-throw exception to allow the Flow controller do its job
     }
   }
