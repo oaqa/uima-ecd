@@ -16,6 +16,8 @@
 
 package edu.cmu.lti.oaqa.ecd.persistence;
 
+import java.util.Set;
+
 public final class DefaultExperimentPersistenceProvider extends AbstractExperimentPersistenceProvider {
   
   @Override
@@ -27,5 +29,11 @@ public final class DefaultExperimentPersistenceProvider extends AbstractExperime
   @Override
   public void updateExperimentMeta(String experimentId, int size) {
     // Do nothing
+  }
+
+  @Override
+  public void updateExperimentMeta(String experimentId, int size, Set<Integer> topics) {
+    // TODO Auto-generated method stub
+    
   }
 }

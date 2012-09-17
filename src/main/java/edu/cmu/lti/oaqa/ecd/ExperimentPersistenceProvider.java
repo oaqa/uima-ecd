@@ -16,10 +16,13 @@
 
 package edu.cmu.lti.oaqa.ecd;
 
+import java.util.Set;
+
 import org.apache.uima.resource.Resource;
 
 public interface ExperimentPersistenceProvider extends Resource {
   void insertExperiment(String id, String name, String author,
          String configuration, String resource) throws Exception;
   void updateExperimentMeta(String experimentId, int size);
+  void updateExperimentMeta(String experimentId, int size, Set<Integer> topics);
 }
