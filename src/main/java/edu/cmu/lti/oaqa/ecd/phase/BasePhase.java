@@ -63,6 +63,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.io.Closeables;
 
 import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.ResourceHandle;
@@ -135,6 +136,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     for (AnalysisEngine ae : options) {
       ae.collectionProcessComplete();
     }
+    executor.shutdown();
   }
 
   public Integer getPhaseNo() {
@@ -218,7 +220,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     s.setCasId(key);
     s.addToIndexes();
   }
-
+  
   private void insertExecutionTrace(JCas jcas, final String optionId, final long startTime,
           final String prevCas, final Trace trace, final String key) throws IOException {
     final String uuid = ProcessingStepUtils.getCurrentExperimentId(jcas);
