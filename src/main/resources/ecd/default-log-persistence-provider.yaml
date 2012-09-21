@@ -1,1 +1,1 @@
-class: edu.cmu.lti.oaqa.ecd.persistence.DefaultLogPersistenceProvider
+class: edu.cmu.lti.oaqa.ecd.impl.DefaultLogPersistenceProvider
