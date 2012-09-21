@@ -35,8 +35,8 @@ import edu.cmu.lti.oaqa.ecd.ExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.config.Stage;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfiguration;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfigurationImpl;
-import edu.cmu.lti.oaqa.ecd.driver.strategy.FunnelingStrategy;
 import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
+import edu.cmu.lti.oaqa.ecd.flow.strategy.FunnelingStrategy;
 import edu.cmu.lti.oaqa.ecd.impl.DefaultFunnelingStrategy;
 
 public final class ECDDriver {

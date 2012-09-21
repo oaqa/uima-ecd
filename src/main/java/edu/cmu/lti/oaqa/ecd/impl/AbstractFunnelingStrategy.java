@@ -17,7 +17,7 @@
 package edu.cmu.lti.oaqa.ecd.impl;
 
 import edu.cmu.lti.oaqa.ecd.config.ConfigurableProvider;
-import edu.cmu.lti.oaqa.ecd.driver.strategy.FunnelingStrategy;
+import edu.cmu.lti.oaqa.ecd.flow.strategy.FunnelingStrategy;
 
 public abstract class AbstractFunnelingStrategy extends ConfigurableProvider implements FunnelingStrategy {
 

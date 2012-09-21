@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.cmu.lti.oaqa.ecd.driver.strategy;
+package edu.cmu.lti.oaqa.ecd.flow.strategy;
 
 import org.apache.uima.resource.Resource;
 
