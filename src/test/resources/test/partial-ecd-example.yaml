@@ -3,8 +3,8 @@ configuration:
   author: junit
   
 processing-strategy:
-  class: edu.cmu.lti.oaqa.ecd.driver.strategy.DefaultProcessingStrategy
-
+  class: edu.cmu.lti.oaqa.ecd.flow.strategy.DefaultFunnelingStrategy
+  
 collection-reader:
   inherit: test.collection.reader
   
