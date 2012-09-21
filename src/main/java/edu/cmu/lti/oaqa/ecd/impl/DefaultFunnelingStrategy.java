@@ -14,21 +14,21 @@
  *  limitations under the License.
  */
 
-package edu.cmu.lti.oaqa.ecd.driver.strategy;
+package edu.cmu.lti.oaqa.ecd.impl;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
 import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
-import edu.cmu.lti.oaqa.ecd.funnel.SetBasedFunnelStrategy;
+import edu.cmu.lti.oaqa.ecd.funnel.SetBasedFunnel;
 
-public final class DefaultProcessingStrategy extends AbstractProcessingStrategy {
+public final class DefaultFunnelingStrategy extends AbstractFunnelingStrategy {
   
   @Override
   public FunneledFlow newFunnelStrategy(String experimentUuid) {
     List<String> matchingTraces = getMatchingTraces(experimentUuid);
-    return new SetBasedFunnelStrategy(matchingTraces);
+    return new SetBasedFunnel(matchingTraces);
   }
   
   private List<String> getMatchingTraces(String experiment) {

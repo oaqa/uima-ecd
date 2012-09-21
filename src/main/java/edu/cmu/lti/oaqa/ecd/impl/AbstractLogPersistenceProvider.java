@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.cmu.lti.oaqa.ecd.persistence;
+package edu.cmu.lti.oaqa.ecd.impl;
 
 import edu.cmu.lti.oaqa.ecd.config.ConfigurableProvider;
 import edu.cmu.lti.oaqa.ecd.log.LogPersistenceProvider;

@@ -1,4 +1,4 @@
-package edu.cmu.lti.oaqa.ecd.persistence;
+package edu.cmu.lti.oaqa.ecd.impl;
 
 import java.util.Date;
 

@@ -25,13 +25,13 @@ import com.google.common.collect.Sets;
 import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
 import edu.cmu.lti.oaqa.ecd.phase.Trace;
 
-public class SetBasedFunnelStrategy extends FixedFlow_impl implements FunneledFlow {
+public class SetBasedFunnel extends FixedFlow_impl implements FunneledFlow {
 
   private static final long serialVersionUID = -8276851415955188563L;
 
   private final Set<String> set;
 
-  public SetBasedFunnelStrategy(Iterable<String> traces) {
+  public SetBasedFunnel(Iterable<String> traces) {
     this.set = Sets.newHashSet(traces);
   }
 

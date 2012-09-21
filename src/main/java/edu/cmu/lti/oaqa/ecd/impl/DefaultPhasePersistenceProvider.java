@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package edu.cmu.lti.oaqa.ecd.persistence;
+package edu.cmu.lti.oaqa.ecd.impl;
 
 import java.io.IOException;
 import java.sql.SQLException;

@@ -35,9 +35,9 @@ import edu.cmu.lti.oaqa.ecd.ExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.config.Stage;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfiguration;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfigurationImpl;
-import edu.cmu.lti.oaqa.ecd.driver.strategy.DefaultProcessingStrategy;
-import edu.cmu.lti.oaqa.ecd.driver.strategy.ProcessingStrategy;
+import edu.cmu.lti.oaqa.ecd.driver.strategy.FunnelingStrategy;
 import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
+import edu.cmu.lti.oaqa.ecd.impl.DefaultFunnelingStrategy;
 
 public final class ECDDriver {
 
@@ -55,7 +55,7 @@ public final class ECDDriver {
 
   void run() throws Exception {
     StagedConfiguration stagedConfig = new StagedConfigurationImpl(config);
-    ProcessingStrategy ps = getProcessingStrategy();
+    FunnelingStrategy ps = getProcessingStrategy();
     for (Stage stage : stagedConfig) {
       FunneledFlow funnel = ps.newFunnelStrategy(builder.getExperimentUuid());
       AnyObject conf = stage.getConfiguration();
@@ -73,11 +73,11 @@ public final class ECDDriver {
     }
   }
   
-  private ProcessingStrategy getProcessingStrategy() throws ResourceInitializationException {
-    ProcessingStrategy ps = new DefaultProcessingStrategy();
+  private FunnelingStrategy getProcessingStrategy() throws ResourceInitializationException {
+    FunnelingStrategy ps = new DefaultFunnelingStrategy();
     AnyObject map = config.getAnyObject("processing-strategy");
     if (map != null) {
-      ps = BaseExperimentBuilder.loadProvider(map, ProcessingStrategy.class);
+      ps = BaseExperimentBuilder.loadProvider(map, FunnelingStrategy.class);
     }
     return ps;
   }

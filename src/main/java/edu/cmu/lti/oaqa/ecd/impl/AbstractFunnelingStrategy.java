@@ -14,10 +14,11 @@
  *  limitations under the License.
  */
 
-package edu.cmu.lti.oaqa.ecd.driver.strategy;
+package edu.cmu.lti.oaqa.ecd.impl;
 
 import edu.cmu.lti.oaqa.ecd.config.ConfigurableProvider;
+import edu.cmu.lti.oaqa.ecd.driver.strategy.FunnelingStrategy;
 
-public abstract class AbstractProcessingStrategy extends ConfigurableProvider implements ProcessingStrategy {
+public abstract class AbstractFunnelingStrategy extends ConfigurableProvider implements FunnelingStrategy {
 
 }

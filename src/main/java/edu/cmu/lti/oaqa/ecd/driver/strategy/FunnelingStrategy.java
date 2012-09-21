@@ -20,6 +20,6 @@ import org.apache.uima.resource.Resource;
 
 import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
 
-public interface ProcessingStrategy extends Resource {
+public interface FunnelingStrategy extends Resource {
   FunneledFlow newFunnelStrategy(String experimentUuid);
 }
