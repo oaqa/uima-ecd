@@ -87,7 +87,10 @@ public final class ECDDriver {
   }
 
   public static void main(String[] args) throws Exception {
-    String uuid = UUID.randomUUID().toString();
+    String uuid = UUID.randomUUID().toString();    
+    if (args.length > 1) {
+      uuid = args[1];
+    }
     System.out.println("Experiment UUID: " + uuid);
     ECDDriver driver = new ECDDriver(args[0], uuid);
     driver.run();
