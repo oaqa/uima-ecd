@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -63,7 +62,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.io.Closeables;
 
 import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.ResourceHandle;
@@ -157,9 +155,11 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
       Trace trace = ProcessingStepUtils.getPartialTrace(prevTrace.getTrace(), getPhaseNo(),
               optionId);
       if (!loadCasFromStorage(nextCas, trace, sequenceId)) {
+        // TODO: Why do we call process on the next() method?
+        // See: http://uima.apache.org/downloads/releaseDocs/2.3.0-incubating/docs/api/org/apache/uima/analysis_component/JCasMultiplier_ImplBase.html
         process(ae, nextCas, prevCasId, prevTrace, optionId, sequenceId, trace);
       }
-      nextAnnotator++; // TODO:Should this be in a final
+      nextAnnotator++; // TODO:Should this be in a final clause?
       return nextCas;
     } catch (Exception e) {
       throw new AnalysisEngineProcessException(e);
@@ -175,11 +175,14 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     try {
       insertExecutionTrace(nextCas, optionId, a, prevCasId, trace, key);
       System.out.printf("[%s] Executing option: %s on trace %s\n", sequenceId, optionId, prevTrace);
-      Future<?> future = executor.submit(new Callable<Object>() {
+      Future<?> future = executor.submit(new Runnable() {
         @Override
-        public Object call() throws Exception {
-          ae.process(wrapped); // Process the next option
-          return null;
+        public void run () {
+          try {
+            ae.process(wrapped); // Process the next option 
+          } catch (Exception e) {
+            Throwables.propagate(e);
+          }
         }
       });
       future.get(15, TimeUnit.MINUTES);
@@ -260,6 +263,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
       expUuid.setUuid(experimentId);
       expUuid.setStageId(stageId);
       expUuid.addToIndexes();
+      System.err.printf("Loaded cas for %s @ %s", sequenceId, trace.getTrace());
     }
     return deserializer.processedCas();
   }
