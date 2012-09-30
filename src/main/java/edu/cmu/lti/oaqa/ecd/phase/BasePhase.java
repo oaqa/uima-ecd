@@ -263,7 +263,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
       expUuid.setUuid(experimentId);
       expUuid.setStageId(stageId);
       expUuid.addToIndexes();
-      System.err.printf("Loaded cas for %s @ %s", sequenceId, trace.getTrace());
+      System.err.printf("Loaded cas for %s @ %s\n", sequenceId, trace.getTrace());
     }
     return deserializer.processedCas();
   }
