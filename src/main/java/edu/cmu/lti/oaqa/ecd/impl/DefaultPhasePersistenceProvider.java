@@ -28,7 +28,7 @@ import edu.cmu.lti.oaqa.ecd.phase.ExecutionStatus;
 public class DefaultPhasePersistenceProvider extends AbstractPhasePersistenceProvider {
 
   @Override
-  public void insertExecutionTrace(String optionId, int sequenceId, String dataset,
+  public void insertExecutionTrace(String optionId, String sequenceId, String dataset,
           Integer phaseNo2, String uuid, long startTime, String hostName, String trace, String key)
           throws IOException {
     // TODO Auto-generated method stub

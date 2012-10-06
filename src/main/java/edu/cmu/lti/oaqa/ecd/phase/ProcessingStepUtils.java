@@ -91,10 +91,10 @@ public class ProcessingStepUtils {
     }
   }
   
-  public static int getSequenceId(JCas nextCas) {
+  public static String getSequenceId(JCas nextCas) {
     InputElement input = (InputElement) CasUtils.getFirst(nextCas, 
             InputElement.class.getName());
-    int sequenceId = input.getSequenceId();
+    String sequenceId = input.getSequenceId();
     return sequenceId;
   }
   

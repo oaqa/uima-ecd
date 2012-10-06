@@ -1,5 +1,5 @@
 
-/* First created by JCasGen Sat Jul 21 15:40:55 EDT 2012 */
+/* First created by JCasGen Sat Oct 06 00:13:26 EDT 2012 */
 package edu.cmu.lti.oaqa.framework.types;
 
 import org.apache.uima.jcas.JCas;
@@ -14,7 +14,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.jcas.tcas.Annotation_Type;
 
 /** 
- * Updated by JCasGen Sat Jul 21 15:40:55 EDT 2012
+ * Updated by JCasGen Sat Oct 06 00:13:26 EDT 2012
  * @generated */
 public class ExperimentUUID_Type extends Annotation_Type {
   /** @generated */

@@ -13,7 +13,7 @@
         <featureDescription>
           <name>sequenceId</name>
           <description/>
-          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
         <featureDescription>
           <name>question</name>
@@ -45,7 +45,7 @@
         <featureDescription>
           <name>sequenceId</name>
           <description/>
-          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
         <featureDescription>
           <name>answer</name>

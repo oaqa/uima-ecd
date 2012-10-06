@@ -81,7 +81,7 @@ public final class ExampleCollectionReader extends CollectionReader_ImplBase {
       expUuid.setStageId(getStageId());
       expUuid.addToIndexes();
       InputElement next = new InputElement(jcas);
-      next.setSequenceId(total + 1);
+      next.setSequenceId(String.valueOf(total + 1));
       next.addToIndexes();
       decorate(jcas);
       //updateExperimentMeta(getUUID(), count);

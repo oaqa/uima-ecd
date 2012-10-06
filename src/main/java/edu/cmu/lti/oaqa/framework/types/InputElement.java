@@ -1,6 +1,6 @@
 
 
-/* First created by JCasGen Sat Jul 21 15:40:55 EDT 2012 */
+/* First created by JCasGen Sat Oct 06 00:13:26 EDT 2012 */
 package edu.cmu.lti.oaqa.framework.types;
 
 import org.apache.uima.jcas.JCas; 
@@ -11,7 +11,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 
 /** 
- * Updated by JCasGen Sat Jul 21 15:40:55 EDT 2012
+ * Updated by JCasGen Sat Oct 06 00:13:26 EDT 2012
  * XML source: /Users/elmer/Documents/workspace/oaqa/uima-ecd/src/main/resources/edu/cmu/lti/oaqa/frameworkTypesDescriptor.xml
  * @generated */
 public class InputElement extends Annotation {
@@ -64,17 +64,17 @@ public class InputElement extends Annotation {
 
   /** getter for sequenceId - gets 
    * @generated */
-  public int getSequenceId() {
+  public String getSequenceId() {
     if (InputElement_Type.featOkTst && ((InputElement_Type)jcasType).casFeat_sequenceId == null)
       jcasType.jcas.throwFeatMissing("sequenceId", "edu.cmu.lti.oaqa.framework.types.InputElement");
-    return jcasType.ll_cas.ll_getIntValue(addr, ((InputElement_Type)jcasType).casFeatCode_sequenceId);}
+    return jcasType.ll_cas.ll_getStringValue(addr, ((InputElement_Type)jcasType).casFeatCode_sequenceId);}
     
   /** setter for sequenceId - sets  
    * @generated */
-  public void setSequenceId(int v) {
+  public void setSequenceId(String v) {
     if (InputElement_Type.featOkTst && ((InputElement_Type)jcasType).casFeat_sequenceId == null)
       jcasType.jcas.throwFeatMissing("sequenceId", "edu.cmu.lti.oaqa.framework.types.InputElement");
-    jcasType.ll_cas.ll_setIntValue(addr, ((InputElement_Type)jcasType).casFeatCode_sequenceId, v);}    
+    jcasType.ll_cas.ll_setStringValue(addr, ((InputElement_Type)jcasType).casFeatCode_sequenceId, v);}    
    
     
   //*--------------*

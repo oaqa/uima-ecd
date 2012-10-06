@@ -40,6 +40,5 @@ public class SecondPhaseAnnotatorBase extends JCasAnnotator_ImplBase {
 		answer.setAnswer("Vesuvius");
 		answer.setSequenceId(input.getSequenceId());
 		answer.addToIndexes();
-	}
-
+	} 
 }
