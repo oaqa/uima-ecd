@@ -53,7 +53,7 @@ public final class ECDDriver {
     this.config = builder.getConfiguration();
   }
 
-  void run() throws Exception {
+  public void run() throws Exception {
     StagedConfiguration stagedConfig = new StagedConfigurationImpl(config);
     FunnelingStrategy ps = getProcessingStrategy();
     for (Stage stage : stagedConfig) {
