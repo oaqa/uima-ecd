@@ -1,6 +1,8 @@
 uima-ecd
 ========
 
+[![Build Status](https://secure.travis-ci.org/oaqa/uima-ecd.png)](http://travis-ci.org/oaqa/uima-ecd)
+
 Extended Configuration Description for UIMA pipelines. 
 
 The Extended Configuration Description (ECD) module, is a set of capabilities built on top of [UIMA](http://uima.apache.org/) and [uimaFIT](http://code.google.com/p/uimafit/), that allows the creation of declarative UIMA pipelines form a configuration file.
