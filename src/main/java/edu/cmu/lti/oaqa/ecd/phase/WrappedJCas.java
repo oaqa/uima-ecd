@@ -134,7 +134,7 @@ class WrappedJCas implements JCas {
   @Override
   public void putJfsFromCaddr(int casAddr, FeatureStructure fs) {
     testLiveness(); 
-    putJfsFromCaddr(casAddr, fs);
+    delegate.putJfsFromCaddr(casAddr, fs);
   }
 
   @Override
@@ -146,13 +146,13 @@ class WrappedJCas implements JCas {
   @Override
   public void checkArrayBounds(int fsRef, int pos) {
     testLiveness(); 
-    checkArrayBounds(fsRef, pos);
+    delegate.checkArrayBounds(fsRef, pos);
   }
 
   @Override
   public void throwFeatMissing(String feat, String type) {
     testLiveness(); 
-    throwFeatMissing(feat, type);
+    delegate.throwFeatMissing(feat, type);
   }
 
   @Override
@@ -220,7 +220,7 @@ class WrappedJCas implements JCas {
   @Deprecated
   public void processInit() {
     testLiveness(); 
-    processInit();
+    delegate.processInit();
   }
 
   @Override
