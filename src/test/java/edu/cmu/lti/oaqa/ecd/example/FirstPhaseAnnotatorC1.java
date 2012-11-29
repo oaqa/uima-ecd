@@ -16,12 +16,26 @@
 
 package edu.cmu.lti.oaqa.ecd.example;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertThat;
+
+import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 
 public class FirstPhaseAnnotatorC1 extends JCasAnnotator_ImplBase {
 
+  @Override
+  public void initialize(UimaContext context) throws ResourceInitializationException {
+    Object o = (Object) context.getConfigParameterValue("float-value");
+    assertThat(o, is(instanceOf(Float.class)));
+    Object o2 = (Object) context.getConfigParameterValue("parameter-c");
+    assertThat(o2, is(instanceOf(Float.class)));
+  }
+  
   @Override
   public void process(JCas jcas) throws AnalysisEngineProcessException {
     System.out.printf("process: %s\n", getClass().getSimpleName());
