@@ -1,1 +1,10 @@
 class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorC1
+float-value: 1.8
+floated-value: !!float 1.8
+float-array: [!!float 1.8, 1.9]
+int-value: 1
+int-array: [2,3]
+boolean-value: true
+boolean-array: [true, false]
+string-value: string
+string-array: [string, string]

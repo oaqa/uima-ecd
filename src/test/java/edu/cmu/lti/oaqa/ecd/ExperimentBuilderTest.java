@@ -39,6 +39,11 @@ public class ExperimentBuilderTest {
   public void testSetupNonStagedPipeline() throws Exception {
     testPipelineSetup("test.nonstaged-ecd-example");
   }
+  
+  @Test
+  public void testPrimitiveValuesPipeline() throws Exception {
+    testPipelineSetup("test.primitive-value-example");
+  }
 
   @Test
   public void testSetupStagedPipeline() throws Exception {

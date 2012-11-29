@@ -342,23 +342,27 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     return params.toArray();
   }
 
-  public static String[] convertListString(Map<String, Object> tuples) {
-    List<String> params = Lists.newArrayList();
-    for (Map.Entry<String, Object> me : tuples.entrySet()) {
-      params.add(me.getKey());
-      params.add(me.getValue().toString());
-    }
-    return params.toArray(new String[0]);
-  }
-
   private static Object cast(Object o) {
     if (o instanceof Iterable) {
       List<?> list = Lists.newArrayList((Iterable<?>) o);
+      Object k = list.get(0);
       if (list.get(0) instanceof String) {
         return list.toArray(new String[0]);
       } else if (list.get(0) instanceof Integer) {
         return list.toArray(new Integer[0]);
+      } else if (list.get(0) instanceof Float) {
+        return list.toArray(new Float[0]);
+      } else if (list.get(0) instanceof Double) {
+        List<Float> bogus = Lists.newArrayList();
+        for (Object j : list) {
+          bogus.add(((Double) j).floatValue());
+        }
+        return bogus.toArray(new Float[0]);
+      } else if (list.get(0) instanceof Boolean) {
+        return list.toArray(new Boolean[0]);
       }
+    } else if (o instanceof Double) {
+      return ((Double) o).floatValue();
     }
     return o;
   }

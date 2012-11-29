@@ -1,0 +1,12 @@
+configuration:
+  name: test-experiment
+  author: junit
+  
+collection-reader:
+  inherit: test.collection.reader
+
+pipeline:
+  - inherit: ecd.phase
+    name: first-phase
+    options: |
+      - inherit: test.first-phase-annotator-c
