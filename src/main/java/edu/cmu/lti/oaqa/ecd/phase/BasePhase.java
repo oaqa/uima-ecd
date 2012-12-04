@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,8 +54,6 @@ import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
