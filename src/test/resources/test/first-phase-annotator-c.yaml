@@ -8,3 +8,8 @@ boolean-value: true
 boolean-array: [true, false]
 string-value: string
 string-array: [string, string]
+cross-opts:
+  parameter-a: [1.8, 1.9]
+  parameter-b: [1, 2, 3, 4]
+  parameter-c: [true,true,false]
+  parameter-d: [value100,value200]
