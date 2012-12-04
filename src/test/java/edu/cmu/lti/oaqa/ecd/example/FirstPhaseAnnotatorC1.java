@@ -30,10 +30,19 @@ public class FirstPhaseAnnotatorC1 extends JCasAnnotator_ImplBase {
 
   @Override
   public void initialize(UimaContext context) throws ResourceInitializationException {
-    Object o = (Object) context.getConfigParameterValue("float-value");
-    assertThat(o, is(instanceOf(Float.class)));
-    Object o2 = (Object) context.getConfigParameterValue("parameter-c");
-    assertThat(o2, is(instanceOf(Float.class)));
+    test(context, "float-value", Float.class);
+    test(context, "int-value", Integer.class);
+    test(context, "boolean-value", Boolean.class);
+    test(context, "string-value", String.class);
+    test(context, "parameter-a", Float.class);
+    test(context, "parameter-b", Integer.class);
+    test(context, "parameter-c", Boolean.class);
+    test(context, "parameter-d", String.class);
+  }
+  
+  private void test(UimaContext context, String name, Class type) {
+    Object o = (Object) context.getConfigParameterValue(name);
+    assertThat(o, is(instanceOf(type)));
   }
   
   @Override

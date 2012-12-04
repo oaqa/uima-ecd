@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,6 +55,8 @@ import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -156,7 +159,8 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
               optionId);
       if (!loadCasFromStorage(nextCas, trace, sequenceId)) {
         // TODO: Why do we call process on the next() method?
-        // See: http://uima.apache.org/downloads/releaseDocs/2.3.0-incubating/docs/api/org/apache/uima/analysis_component/JCasMultiplier_ImplBase.html
+        // See:
+        // http://uima.apache.org/downloads/releaseDocs/2.3.0-incubating/docs/api/org/apache/uima/analysis_component/JCasMultiplier_ImplBase.html
         process(ae, nextCas, prevCasId, prevTrace, optionId, sequenceId, trace);
       }
       nextAnnotator++; // TODO:Should this be in a final clause?
@@ -177,9 +181,9 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
       System.out.printf("[%s] Executing option: %s on trace %s\n", sequenceId, optionId, prevTrace);
       Future<?> future = executor.submit(new Runnable() {
         @Override
-        public void run () {
+        public void run() {
           try {
-            ae.process(wrapped); // Process the next option 
+            ae.process(wrapped); // Process the next option
           } catch (Exception e) {
             Throwables.propagate(e);
           }
@@ -223,7 +227,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     s.setCasId(key);
     s.addToIndexes();
   }
-  
+
   private void insertExecutionTrace(JCas jcas, final String optionId, final long startTime,
           final String prevCas, final Trace trace, final String key) throws IOException {
     final String uuid = ProcessingStepUtils.getCurrentExperimentId(jcas);
@@ -406,10 +410,11 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
               tuples, comp);
       aes.add(aeDesc);
     } else {
-      Set<List<String>> product = doCartesianProduct(crossOpts);
-      for (List<String> configuration : product) {
+      List<String> paramNames = getParameterNames(crossOpts);
+      Set<List<Object>> product = doCartesianProduct(crossOpts);
+      for (List<Object> configuration : product) {
         Map<String, Object> inner = Maps.newLinkedHashMap(tuples);
-        setInnerParams(configuration, inner);
+        setInnerParams(paramNames, configuration, inner);
         AnalysisEngineDescription aeDesc = BaseExperimentBuilder.createAnalysisEngineDescription(
                 inner, comp);
         aes.add(aeDesc);
@@ -418,26 +423,38 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     return aes;
   }
 
-  private Set<List<String>> doCartesianProduct(AnyObject crossOpts) {
-    List<Set<String>> sets = Lists.newArrayList();
+  private List<String> getParameterNames(AnyObject crossOpts) {
+    List<String> names = Lists.newArrayList(); // parameter names
     for (AnyTuple tuple : crossOpts.getTuples()) {
-      Set<String> params = Sets.newHashSet();
       String key = tuple.getKey();
+      names.add(key);
+    }
+    return names;
+  }
+
+  private Set<List<Object>> doCartesianProduct(AnyObject crossOpts) {
+    List<Set<Object>> sets = Lists.newArrayList(); // input parameters
+    List<String> names = Lists.newArrayList(); // parameter names
+    for (AnyTuple tuple : crossOpts.getTuples()) {
+      Set<Object> params = Sets.newHashSet();
+      String key = tuple.getKey();
+      names.add(key);
       @SuppressWarnings("unchecked")
       Iterable<Object> values = (Iterable<Object>) tuple.getObject();
       for (Object o : values) {
-        params.add(String.format("%s||%s", key, o));
+        params.add(o);
       }
       sets.add(params);
     }
-    Set<List<String>> product = Sets.cartesianProduct(sets);
+    Set<List<Object>> product = Sets.cartesianProduct(sets);
     return product;
   }
 
-  private void setInnerParams(List<String> configuration, Map<String, Object> inner) {
-    for (String param : configuration) {
-      String[] pair = param.split("\\|\\|");
-      inner.put(pair[0], pair[1]);
+  private void setInnerParams(List<String> paramNames, List<Object> configuration, Map<String, Object> inner) {
+    for (int i = 0; i < paramNames.size(); i++) {
+      String key = paramNames.get(i);
+      Object value = configuration.get(i);
+      inner.put(key, value);
     }
   }
 

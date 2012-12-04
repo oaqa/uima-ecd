@@ -9,6 +9,7 @@ boolean-array: [true, false]
 string-value: string
 string-array: [string, string]
 cross-opts:
-  parameter-a: [value100,value200]
-  parameter-b: [value400]
-  parameter-c: [1.8, 1.9]
+  parameter-a: [1.8, 1.9]
+  parameter-b: [1, 2, 3, 4]
+  parameter-c: [true,true,false]
+  parameter-d: [value100,value200]
