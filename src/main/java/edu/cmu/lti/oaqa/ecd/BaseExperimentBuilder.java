@@ -229,23 +229,6 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
             ConfigurationLoader.getString(resource), resource);
   }
 
-  private <C> C buildFromClassOrInherit(AnyObject descriptor, Class<C> ifaceClass) throws Exception {
-    String name = descriptor.getString("class");
-    if (name != null) {
-      Class<? extends C> aClass = Class.forName(name).asSubclass(ifaceClass);
-      return aClass.newInstance();
-    } else {
-      String resource = descriptor.getString("inherit");
-      if (resource != null) {
-        AnyObject yaml = ConfigurationLoader.load(resource);
-        return buildFromClassOrInherit(yaml, ifaceClass);
-      } else {
-        throw new IllegalArgumentException(
-                "Illegal experiment descriptor, must contain one node of type <class> or <inherit>");
-      }
-    }
-  }
-
   public static <T extends Resource> T loadProvider(String provider, Class<T> type)
           throws ResourceInitializationException {
     Yaml yaml = new Yaml();
@@ -346,13 +329,13 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     if (o instanceof Iterable) {
       List<?> list = Lists.newArrayList((Iterable<?>) o);
       Object k = list.get(0);
-      if (list.get(0) instanceof String) {
+      if (k instanceof String) {
         return list.toArray(new String[0]);
-      } else if (list.get(0) instanceof Integer) {
+      } else if (k instanceof Integer) {
         return list.toArray(new Integer[0]);
-      } else if (list.get(0) instanceof Float) {
+      } else if (k instanceof Float) {
         return list.toArray(new Float[0]);
-      } else if (list.get(0) instanceof Double) {
+      } else if (k instanceof Double) {
         List<Float> bogus = Lists.newArrayList();
         for (Object j : list) {
           bogus.add(((Double) j).floatValue());

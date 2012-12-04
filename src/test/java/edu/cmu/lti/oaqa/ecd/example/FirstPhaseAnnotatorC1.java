@@ -38,9 +38,13 @@ public class FirstPhaseAnnotatorC1 extends JCasAnnotator_ImplBase {
     test(context, "parameter-b", Integer.class);
     test(context, "parameter-c", Boolean.class);
     test(context, "parameter-d", String.class);
+    test(context, "float-array", Float[].class);
+    test(context, "int-array", Integer[].class);
+    test(context, "boolean-array", Boolean[].class);
+    test(context, "string-array", String[].class);
   }
   
-  private void test(UimaContext context, String name, Class type) {
+  private void test(UimaContext context, String name, Class<?> type) {
     Object o = (Object) context.getConfigParameterValue(name);
     assertThat(o, is(instanceOf(type)));
   }

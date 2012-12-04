@@ -78,7 +78,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
 
   public static final String QA_INTERNAL_PHASEID = "__.qa.internal.phaseid.__";
 
-  private static final String CROSS_OPTS_PARAM = "cross-opts";
+  private static final String CROSS_PARAMS_KEY = "cross-opts";
 
   private AnalysisEngine[] options;
 
@@ -401,14 +401,14 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     Map<String, Object> tuples = Maps.newLinkedHashMap();
     Class<? extends AnalysisComponent> comp = BaseExperimentBuilder.loadFromClassOrInherit(handle,
             AnalysisComponent.class, tuples);
-    AnyObject crossOpts = (AnyObject) tuples.remove(CROSS_OPTS_PARAM);
-    if (crossOpts == null) {
+    AnyObject crossParams = (AnyObject) tuples.remove(CROSS_PARAMS_KEY);
+    if (crossParams == null) {
       AnalysisEngineDescription aeDesc = BaseExperimentBuilder.createAnalysisEngineDescription(
               tuples, comp);
       aes.add(aeDesc);
     } else {
-      List<String> paramNames = getParameterNames(crossOpts);
-      Set<List<Object>> product = doCartesianProduct(crossOpts);
+      List<String> paramNames = getParameterNames(crossParams);
+      Set<List<Object>> product = doCartesianProduct(crossParams);
       for (List<Object> configuration : product) {
         Map<String, Object> inner = Maps.newLinkedHashMap(tuples);
         setInnerParams(paramNames, configuration, inner);
@@ -420,26 +420,26 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     return aes;
   }
 
-  private List<String> getParameterNames(AnyObject crossOpts) {
+  private List<String> getParameterNames(AnyObject crossParams) {
     List<String> names = Lists.newArrayList(); // parameter names
-    for (AnyTuple tuple : crossOpts.getTuples()) {
+    for (AnyTuple tuple : crossParams.getTuples()) {
       String key = tuple.getKey();
       names.add(key);
     }
     return names;
   }
 
-  private Set<List<Object>> doCartesianProduct(AnyObject crossOpts) {
+  private Set<List<Object>> doCartesianProduct(AnyObject crossParams) {
     List<Set<Object>> sets = Lists.newArrayList(); // input parameters
     List<String> names = Lists.newArrayList(); // parameter names
-    for (AnyTuple tuple : crossOpts.getTuples()) {
+    for (AnyTuple tuple : crossParams.getTuples()) {
       Set<Object> params = Sets.newHashSet();
       String key = tuple.getKey();
       names.add(key);
       @SuppressWarnings("unchecked")
       Iterable<Object> values = (Iterable<Object>) tuple.getObject();
-      for (Object o : values) {
-        params.add(o);
+      for (Object value : values) {
+        params.add(value);
       }
       sets.add(params);
     }
