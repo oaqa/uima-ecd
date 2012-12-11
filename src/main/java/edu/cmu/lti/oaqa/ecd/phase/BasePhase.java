@@ -74,11 +74,16 @@ import edu.cmu.lti.oaqa.framework.types.ProcessingStep;
 // The superclass also adds this annotation, we just want to be explicit about doing it
 @OperationalProperties(outputsNewCases = true)
 public final class BasePhase extends JCasMultiplier_ImplBase {
+
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
   public static final String QA_INTERNAL_PHASEID = "__.qa.internal.phaseid.__";
 
+  private static final String TIMEOUT_KEY = "option-timeout";
+
   private static final String CROSS_PARAMS_KEY = "cross-opts";
+  
+  private static final int DEFAULT_OPTION_TIMEOUT = 5;
 
   private AnalysisEngine[] options;
 
@@ -87,6 +92,8 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
   private JCas cas;
 
   private Integer phaseNo;
+
+  private Integer optionTimeout;
 
   private String phaseName;
 
@@ -103,6 +110,10 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     this.persistence = BaseExperimentBuilder.loadProvider(pp, PhasePersistenceProvider.class);
     this.phaseName = (String) ctx.getConfigParameterValue("name");
     this.phaseNo = (Integer) ctx.getConfigParameterValue(QA_INTERNAL_PHASEID);
+    this.optionTimeout = (Integer) ctx.getConfigParameterValue(TIMEOUT_KEY);
+    if (optionTimeout == null) {
+      this.optionTimeout = DEFAULT_OPTION_TIMEOUT;
+    }
     System.out.println("Phase: " + toString());
     String experimentId = (String) ctx
             .getConfigParameterValue(BaseExperimentBuilder.EXPERIMENT_UUID_PROPERTY);
@@ -180,25 +191,32 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
         @Override
         public void run() {
           try {
-            ae.process(wrapped); // Process the next option
+            // Process the next option
+            ae.process(wrapped);
           } catch (Exception e) {
-            Throwables.propagate(e);
+            Throwables.propagate(e); // Propagate the exception so the thread effectively dies.
           }
         }
       });
-      future.get(15, TimeUnit.MINUTES);
-      long b = System.currentTimeMillis();
-      updateTrace(nextCas, optionId, key);
-      storeCas(nextCas, b, key);
-      System.out.printf("[%s]  Execution time for option %s: %ss\n", sequenceId, optionId,
-              (b - a) / 1000);
-    } catch (TimeoutException e) {
-      wrapped.invalidate();
-      long b = System.currentTimeMillis();
-      storeException(b, e, key, ExecutionStatus.TIMEOUT);
-      System.out.printf("[%s]  Execution timed out for option: %s after %ss\n", sequenceId,
-              optionId, (b - a) / 1000);
-      throw e; // Re-throw exception to allow the Flow controller do its job
+      try {
+        future.get(optionTimeout, TimeUnit.MINUTES);
+        long b = System.currentTimeMillis();
+        updateTrace(nextCas, optionId, key);
+        storeCas(nextCas, b, key);
+        System.out.printf("[%s]  Execution time for option %s: %ss\n", sequenceId, optionId,
+                (b - a) / 1000);
+      } catch (TimeoutException e) {
+        // If the task is taking to long, most likely it is reading from a resource
+        // If it is an iterative algorithm, another approach must be taken
+        boolean canceled = future.cancel(true);
+        wrapped.invalidate();
+        long b = System.currentTimeMillis();
+        storeException(b, e, key, ExecutionStatus.TIMEOUT);
+        System.out.printf(
+                "[%s]  Execution timed out for option: %s after %ss (task was interrupted=%s)\n",
+                sequenceId, optionId, (b - a) / 1000, canceled);
+        throw e; // Re-throw exception to allow the Flow controller do its job
+      }
     } catch (Exception e) {
       long b = System.currentTimeMillis();
       try {
@@ -447,7 +465,8 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     return product;
   }
 
-  private void setInnerParams(List<String> paramNames, List<Object> configuration, Map<String, Object> inner) {
+  private void setInnerParams(List<String> paramNames, List<Object> configuration,
+          Map<String, Object> inner) {
     for (int i = 0; i < paramNames.size(); i++) {
       String key = paramNames.get(i);
       Object value = configuration.get(i);

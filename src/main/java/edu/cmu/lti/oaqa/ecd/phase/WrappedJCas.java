@@ -46,15 +46,20 @@ class WrappedJCas implements JCas {
   }
 
   void invalidate() {
-    // TODO: This is one of the places where we hacked the solution
+    // TODO: Fixme: this is one of the places where we hacked the timeout solution
     delegate.getCasImpl().enableReset(true);
     delegate.release();
     this.alive = false;
   }
 
+  /** 
+   * All methods in the wrapper class invoke this method, to fail fast if the 
+   * CAS has already been discarded. This will effectively teminate the thread 
+   * that invoked it.
+   */
   private void testLiveness() {
     if (!alive) {
-      throw new IllegalStateException("Cas was already death");
+      throw new IllegalStateException("CAS was already discarded");
     }
   }
 
