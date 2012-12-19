@@ -27,6 +27,10 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import com.google.common.primitives.Ints;
 
 import edu.cmu.lti.oaqa.ecd.util.CasUtils;
@@ -108,6 +112,40 @@ public class ProcessingStepUtils {
     List<Annotation> list = new ExperimentUUIDOrdering().sortedCopy(steps);
     return (ExperimentUUID) list.get(list.size() - 1);
   }
+  
+  /**
+   * Execution hash is computed from JCas currentExperimentId, trace and sequenceId
+   * @return MD5 hash corresponding to the above mentioned elements
+   */
+  public static String getExecutionIdHash(String experimentId, Trace trace, int sequenceId) {
+    HashFunction hf = Hashing.md5();
+    Hasher hasher = hf.newHasher();
+    hasher.putString(experimentId);
+    hasher.putString(trace.getTrace());
+    hasher.putString(String.valueOf(sequenceId));
+    HashCode hash = hasher.hash();
+    final String traceHash = hash.toString();
+    return traceHash;
+  }
+  
+  /**
+   * Execution hash is computed from JCas currentExperimentId, trace and sequenceId
+   * @return MD5 hash corresponding to the above mentioned elements
+   */
+  public static String getExecutionIdHash(JCas jcas) {
+    String experimentId = ProcessingStepUtils.getCurrentExperimentId(jcas);
+    Trace trace = ProcessingStepUtils.getTrace(jcas);
+    int sequenceId = ProcessingStepUtils.getSequenceId(jcas);
+    HashFunction hf = Hashing.md5();
+    Hasher hasher = hf.newHasher();
+    hasher.putString(experimentId);
+    hasher.putString(trace.getTrace());
+    hasher.putString(String.valueOf(sequenceId));
+    HashCode hash = hasher.hash();
+    final String traceHash = hash.toString();
+    return traceHash;
+  }
+  
   
   private static final class ExperimentUUIDOrdering extends Ordering<Annotation> {
     @Override

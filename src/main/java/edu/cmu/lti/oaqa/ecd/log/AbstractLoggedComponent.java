@@ -17,16 +17,16 @@
 package edu.cmu.lti.oaqa.ecd.log;
 
 import org.apache.uima.UimaContext;
-import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 
 import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.phase.ProcessingStepUtils;
+import edu.cmu.lti.oaqa.ecd.phase.TerminableComponent;
 import edu.cmu.lti.oaqa.ecd.phase.Trace;
 
-public abstract class AbstractLoggedComponent extends JCasAnnotator_ImplBase {
+public abstract class AbstractLoggedComponent extends TerminableComponent {
 
   protected String uuid;
 
@@ -37,6 +37,7 @@ public abstract class AbstractLoggedComponent extends JCasAnnotator_ImplBase {
   @Override
   public void initialize(UimaContext c)
           throws ResourceInitializationException {
+    super.initialize(c);
     String pp = (String) c.getConfigParameterValue("persistence-provider");
     if (pp == null) {
       throw new ResourceInitializationException(new IllegalArgumentException(
@@ -48,6 +49,7 @@ public abstract class AbstractLoggedComponent extends JCasAnnotator_ImplBase {
   
   @Override
   public void process(JCas jcas) throws AnalysisEngineProcessException {
+    super.process(jcas);
     this.uuid = ProcessingStepUtils.getCurrentExperimentId(jcas);
     this.trace = ProcessingStepUtils.getTrace(jcas);
   }

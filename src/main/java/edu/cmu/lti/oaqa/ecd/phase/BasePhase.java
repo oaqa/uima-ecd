@@ -58,14 +58,12 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 
 import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.ResourceHandle;
 import edu.cmu.lti.oaqa.ecd.ResourceHandle.HandleType;
+import edu.cmu.lti.oaqa.ecd.phase.event.PhaseEventBus;
+import edu.cmu.lti.oaqa.ecd.phase.event.TerminateEvent;
 import edu.cmu.lti.oaqa.ecd.util.CasUtils;
 import edu.cmu.lti.oaqa.framework.types.ExperimentUUID;
 import edu.cmu.lti.oaqa.framework.types.InputElement;
@@ -82,7 +80,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
   private static final String TIMEOUT_KEY = "option-timeout";
 
   private static final String CROSS_PARAMS_KEY = "cross-opts";
-  
+
   private static final int DEFAULT_OPTION_TIMEOUT = 5;
 
   private AnalysisEngine[] options;
@@ -166,7 +164,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
       Trace trace = ProcessingStepUtils.getPartialTrace(prevTrace.getTrace(), getPhaseNo(),
               optionId);
       if (!loadCasFromStorage(nextCas, trace, sequenceId)) {
-        // TODO: Why do we call process on the next() method?
+        // TODO: Why do we call process from next() method?
         // See:
         // http://uima.apache.org/downloads/releaseDocs/2.3.0-incubating/docs/api/org/apache/uima/analysis_component/JCasMultiplier_ImplBase.html
         process(ae, nextCas, prevCasId, prevTrace, optionId, sequenceId, trace);
@@ -181,41 +179,59 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
   private void process(final AnalysisEngine ae, JCas nextCas, String prevCasId, Trace prevTrace,
           String optionId, int sequenceId, Trace trace) throws IOException, SAXException, Exception {
     long a = System.currentTimeMillis();
-    final WrappedJCas wrapped = new WrappedJCas(nextCas);
     final String uuid = ProcessingStepUtils.getCurrentExperimentId(nextCas);
-    final String key = getExecutionHash(uuid, trace, sequenceId);
+    final String key = ProcessingStepUtils.getExecutionIdHash(uuid, trace, sequenceId);
     try {
       insertExecutionTrace(nextCas, optionId, a, prevCasId, trace, key);
       System.out.printf("[%s] Executing option: %s on trace %s\n", sequenceId, optionId, prevTrace);
+      // Wrap the JCas to ignore downstream method invocation in case component timeout.
+      final DeferredTerminationJCasWrapper wrapped = new DeferredTerminationJCasWrapper(nextCas);
+      // We are using a single thread executor for each phase, this means that
+      // at any point no more than a single task should be executed until 
+      // the previous task finishes or dies
       Future<?> future = executor.submit(new Runnable() {
         @Override
         public void run() {
           try {
-            // Process the next option
-            ae.process(wrapped);
+            // The execution id hash is added just before the future is executed
+            wrapped.addExecutionIdHash(key);
+            // Here is where the actual option is processed
+            ae.process(wrapped); 
           } catch (Exception e) {
-            Throwables.propagate(e); // Propagate the exception so the thread effectively dies.
+            // Propagate the exception so it gets printed.
+            // An async mechanism should be used to get the exception
+            // back into the calling thread
+            Throwables.propagate(e); 
           }
         }
       });
       try {
         future.get(optionTimeout, TimeUnit.MINUTES);
         long b = System.currentTimeMillis();
-        updateTrace(nextCas, optionId, key);
+        addProcessingStep(nextCas, optionId, key);
         storeCas(nextCas, b, key);
         System.out.printf("[%s]  Execution time for option %s: %ss\n", sequenceId, optionId,
                 (b - a) / 1000);
       } catch (TimeoutException e) {
-        // If the task is taking to long, most likely it is reading from a resource
-        // If it is an iterative algorithm, another approach must be taken
-        boolean canceled = future.cancel(true);
+        // If the AE is taking too long and it times out it could be either:
+        // 1) It's reading from a resource or 
+        // 2) it's stuck on a iterative algorithm.
+        
+        // First send a termination event so the AE is aware that it's been terminated.
+        // Classes that inherit from TerminableComponent have access to this information
+        // and should check if the component has been terminated.
+        PhaseEventBus.sendTerminateEvent(new TerminateEvent(key));
+        // The cancel(true) method will call notify, any waiting IO operations will be interrupted,
+        // with an InterruptedIOException and the component be rendered invalid.
+        future.cancel(true);
+        // We invalidate the JCas wrapper, so any subsequent calls to it will throw an Exception
         wrapped.invalidate();
         long b = System.currentTimeMillis();
         storeException(b, e, key, ExecutionStatus.TIMEOUT);
-        System.out.printf(
-                "[%s]  Execution timed out for option: %s after %ss (task was interrupted=%s)\n",
-                sequenceId, optionId, (b - a) / 1000, canceled);
-        throw e; // Re-throw exception to allow the Flow controller do its job
+        System.out.printf("[%s]  Execution timed out for option: %s after %ss\n", sequenceId,
+                optionId, (b - a) / 1000);
+        // Finally re-throw the exception to allow the flow controller do its job
+        throw e;
       }
     } catch (Exception e) {
       long b = System.currentTimeMillis();
@@ -235,7 +251,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     CasCopier.copyCas(existingCas.getCas(), emptyCas.getCas(), true);
   }
 
-  private void updateTrace(JCas jcas, String optionId, String key) {
+  private void addProcessingStep(JCas jcas, String optionId, String key) {
     ProcessingStep s = new ProcessingStep(jcas);
     s.setComponent(optionId);
     s.setPhaseId(getPhaseNo());
@@ -275,7 +291,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     ExperimentUUID experiment = ProcessingStepUtils.getCurrentExperiment(jcas);
     String experimentId = experiment.getUuid();
     int stageId = experiment.getStageId();
-    final String hash = getExecutionHash(experimentId, trace, sequenceId);
+    final String hash = ProcessingStepUtils.getExecutionIdHash(experimentId, trace, sequenceId);
     CasDeserializer deserializer = persistence.deserialize(jcas, hash);
     if (deserializer.processedCas()) {
       ExperimentUUID expUuid = new ExperimentUUID(jcas);
@@ -285,17 +301,6 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
       System.err.printf("Loaded cas for %s @ %s\n", sequenceId, trace.getTrace());
     }
     return deserializer.processedCas();
-  }
-
-  private String getExecutionHash(String experimentId, final Trace trace, int sequenceId) {
-    HashFunction hf = Hashing.md5();
-    Hasher hasher = hf.newHasher();
-    hasher.putString(experimentId);
-    hasher.putString(trace.getTrace());
-    hasher.putString(String.valueOf(sequenceId));
-    HashCode hash = hasher.hash();
-    final String traceHash = hash.toString();
-    return traceHash;
   }
 
   private String getHostName() throws IOException {

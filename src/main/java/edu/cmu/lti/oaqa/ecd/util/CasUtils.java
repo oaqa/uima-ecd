@@ -1,17 +1,30 @@
 package edu.cmu.lti.oaqa.ecd.util;
 
 
+import java.util.Iterator;
+
 import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.cas.TOP;
 import org.apache.uima.jcas.tcas.Annotation;
+import org.uimafit.util.JCasUtil;
 
 
 public final class CasUtils {
 
   private CasUtils() {}
+
+  public static <T extends TOP> T getLast(JCas jcas, Class<T> type) {
+    Iterator<T> iterator = JCasUtil.iterator(jcas, type);
+    T last = null;
+    while (iterator.hasNext()) {
+      last = iterator.next();
+    }
+    return last;
+  }
   
   public static Annotation getFirst(JCas jcas, String typeName) {
     TypeSystem ts = jcas.getTypeSystem();
