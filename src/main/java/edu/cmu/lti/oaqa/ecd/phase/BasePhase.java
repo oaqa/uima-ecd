@@ -154,24 +154,30 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
   public JCas next() throws AnalysisEngineProcessException {
     AnalysisEngine ae = options[nextAnnotator];
     JCas nextCas = getEmptyJCas();
-    greedyCopy(cas, nextCas);
     try {
-      AnnotationIndex<Annotation> prevSteps = nextCas.getAnnotationIndex(ProcessingStep.type);
-      String prevCasId = ProcessingStepUtils.getPreviousCasId(prevSteps);
-      Trace prevTrace = ProcessingStepUtils.getTrace(prevSteps);
-      String optionId = ae.getAnalysisEngineMetaData().getName();
-      int sequenceId = ProcessingStepUtils.getSequenceId(nextCas);
-      Trace trace = ProcessingStepUtils.getPartialTrace(prevTrace.getTrace(), getPhaseNo(),
-              optionId);
-      if (!loadCasFromStorage(nextCas, trace, sequenceId)) {
-        // TODO: Why do we call process from next() method?
-        // See:
-        // http://uima.apache.org/downloads/releaseDocs/2.3.0-incubating/docs/api/org/apache/uima/analysis_component/JCasMultiplier_ImplBase.html
-        process(ae, nextCas, prevCasId, prevTrace, optionId, sequenceId, trace);
+      greedyCopy(cas, nextCas);
+      try {
+        AnnotationIndex<Annotation> prevSteps = nextCas.getAnnotationIndex(ProcessingStep.type);
+        String prevCasId = ProcessingStepUtils.getPreviousCasId(prevSteps);
+        Trace prevTrace = ProcessingStepUtils.getTrace(prevSteps);
+        String optionId = ae.getAnalysisEngineMetaData().getName();
+        int sequenceId = ProcessingStepUtils.getSequenceId(nextCas);
+        Trace trace = ProcessingStepUtils.getPartialTrace(prevTrace.getTrace(), getPhaseNo(),
+                optionId);
+        if (!loadCasFromStorage(nextCas, trace, sequenceId)) {
+          // TODO: Why do we call process from next() method?
+          // See:
+          // http://uima.apache.org/downloads/releaseDocs/2.3.0-incubating/docs/api/org/apache/uima/analysis_component/JCasMultiplier_ImplBase.html
+          process(ae, nextCas, prevCasId, prevTrace, optionId, sequenceId, trace);
+        }
+        nextAnnotator++; // TODO:Should this be in a final clause?
+        return nextCas;
+      } catch (Exception e) {
+        throw new AnalysisEngineProcessException(e);
       }
-      nextAnnotator++; // TODO:Should this be in a final clause?
-      return nextCas;
-    } catch (Exception e) {
+    } catch(Exception e) {
+      // Release if greedyCopy fails
+      nextCas.release();
       throw new AnalysisEngineProcessException(e);
     }
   }
@@ -187,7 +193,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
       // Wrap the JCas to ignore downstream method invocation in case component timeout.
       final DeferredTerminationJCasWrapper wrapped = new DeferredTerminationJCasWrapper(nextCas);
       // We are using a single thread executor for each phase, this means that
-      // at any point no more than a single task should be executed until 
+      // at any point no more than a single task should be executed until
       // the previous task finishes or dies
       Future<?> future = executor.submit(new Runnable() {
         @Override
@@ -196,12 +202,12 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
             // The execution id hash is added just before the future is executed
             wrapped.addExecutionIdHash(key);
             // Here is where the actual option is processed
-            ae.process(wrapped); 
+            ae.process(wrapped);
           } catch (Exception e) {
             // Propagate the exception so it gets printed.
             // An async mechanism should be used to get the exception
             // back into the calling thread
-            Throwables.propagate(e); 
+            Throwables.propagate(e);
           }
         }
       });
@@ -214,9 +220,9 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
                 (b - a) / 1000);
       } catch (TimeoutException e) {
         // If the AE is taking too long and it times out it could be either:
-        // 1) It's reading from a resource or 
+        // 1) It's reading from a resource or
         // 2) it's stuck on a iterative algorithm.
-        
+
         // First send a termination event so the AE is aware that it's been terminated.
         // Classes that inherit from TerminableComponent have access to this information
         // and should check if the component has been terminated.
