@@ -11,7 +11,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 
 /** 
- * Updated by JCasGen Sat Jul 21 15:40:55 EDT 2012
+ * Updated by JCasGen Tue Dec 18 23:01:13 EST 2012
  * XML source: /Users/elmer/Documents/workspace/oaqa/uima-ecd/src/main/resources/edu/cmu/lti/oaqa/frameworkTypesDescriptor.xml
  * @generated */
 public class ProcessingStep extends Annotation {
