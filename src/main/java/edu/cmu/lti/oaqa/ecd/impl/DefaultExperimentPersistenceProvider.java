@@ -32,7 +32,7 @@ public final class DefaultExperimentPersistenceProvider extends AbstractExperime
   }
 
   @Override
-  public void updateExperimentMeta(String experimentId, int size, Set<Integer> topics) {
+  public void updateExperimentMeta(String experimentId, int size, Set<String> topics) {
     // TODO Auto-generated method stub
     
   }

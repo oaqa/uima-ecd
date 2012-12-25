@@ -95,10 +95,10 @@ public class ProcessingStepUtils {
     }
   }
   
-  public static int getSequenceId(JCas nextCas) {
+  public static String getSequenceId(JCas nextCas) {
     InputElement input = (InputElement) CasUtils.getFirst(nextCas, 
             InputElement.class.getName());
-    int sequenceId = input.getSequenceId();
+    String sequenceId = input.getSequenceId();
     return sequenceId;
   }
   
@@ -117,7 +117,7 @@ public class ProcessingStepUtils {
    * Execution hash is computed from JCas currentExperimentId, trace and sequenceId
    * @return MD5 hash corresponding to the above mentioned elements
    */
-  public static String getExecutionIdHash(String experimentId, Trace trace, int sequenceId) {
+  public static String getExecutionIdHash(String experimentId, Trace trace, String sequenceId) {
     HashFunction hf = Hashing.md5();
     Hasher hasher = hf.newHasher();
     hasher.putString(experimentId);
@@ -135,7 +135,7 @@ public class ProcessingStepUtils {
   public static String getExecutionIdHash(JCas jcas) {
     String experimentId = ProcessingStepUtils.getCurrentExperimentId(jcas);
     Trace trace = ProcessingStepUtils.getTrace(jcas);
-    int sequenceId = ProcessingStepUtils.getSequenceId(jcas);
+    String sequenceId = ProcessingStepUtils.getSequenceId(jcas);
     HashFunction hf = Hashing.md5();
     Hasher hasher = hf.newHasher();
     hasher.putString(experimentId);

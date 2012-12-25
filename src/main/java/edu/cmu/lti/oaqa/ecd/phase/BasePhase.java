@@ -161,7 +161,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
         String prevCasId = ProcessingStepUtils.getPreviousCasId(prevSteps);
         Trace prevTrace = ProcessingStepUtils.getTrace(prevSteps);
         String optionId = ae.getAnalysisEngineMetaData().getName();
-        int sequenceId = ProcessingStepUtils.getSequenceId(nextCas);
+        String sequenceId = ProcessingStepUtils.getSequenceId(nextCas);
         Trace trace = ProcessingStepUtils.getPartialTrace(prevTrace.getTrace(), getPhaseNo(),
                 optionId);
         if (!loadCasFromStorage(nextCas, trace, sequenceId)) {
@@ -183,7 +183,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
   }
 
   private void process(final AnalysisEngine ae, JCas nextCas, String prevCasId, Trace prevTrace,
-          String optionId, int sequenceId, Trace trace) throws IOException, SAXException, Exception {
+          String optionId, String sequenceId, Trace trace) throws IOException, SAXException, Exception {
     long a = System.currentTimeMillis();
     final String uuid = ProcessingStepUtils.getCurrentExperimentId(nextCas);
     final String key = ProcessingStepUtils.getExecutionIdHash(uuid, trace, sequenceId);
@@ -270,7 +270,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     final String uuid = ProcessingStepUtils.getCurrentExperimentId(jcas);
     InputElement input = (InputElement) CasUtils.getFirst(jcas, InputElement.class.getName());
     final String dataset = input.getDataset();
-    final int sequenceId = input.getSequenceId();
+    final String sequenceId = input.getSequenceId();
     persistence.insertExecutionTrace(optionId, sequenceId, dataset, getPhaseNo(), uuid, startTime,
             getHostName(), trace.getTrace(), key);
   }
@@ -293,7 +293,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     persistence.storeException(bytes, status, endTime, key);
   }
 
-  private boolean loadCasFromStorage(JCas jcas, Trace trace, int sequenceId) throws SQLException {
+  private boolean loadCasFromStorage(JCas jcas, Trace trace, String sequenceId) throws SQLException {
     ExperimentUUID experiment = ProcessingStepUtils.getCurrentExperiment(jcas);
     String experimentId = experiment.getUuid();
     int stageId = experiment.getStageId();

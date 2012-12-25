@@ -1,5 +1,5 @@
 
-/* First created by JCasGen Sat Jul 21 15:40:55 EDT 2012 */
+/* First created by JCasGen Sat Oct 06 00:13:26 EDT 2012 */
 package edu.cmu.lti.oaqa.framework.types;
 
 import org.apache.uima.jcas.JCas;
@@ -14,7 +14,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.jcas.tcas.Annotation_Type;
 
 /** 
- * Updated by JCasGen Tue Dec 18 23:01:13 EST 2012
+ * Updated by JCasGen Sat Oct 06 00:13:26 EDT 2012
  * @generated */
 public class OutputElement_Type extends Annotation_Type {
   /** @generated */
@@ -46,16 +46,16 @@ public class OutputElement_Type extends Annotation_Type {
   /** @generated */
   final int     casFeatCode_sequenceId;
   /** @generated */ 
-  public int getSequenceId(int addr) {
+  public String getSequenceId(int addr) {
         if (featOkTst && casFeat_sequenceId == null)
       jcas.throwFeatMissing("sequenceId", "edu.cmu.lti.oaqa.framework.types.OutputElement");
-    return ll_cas.ll_getIntValue(addr, casFeatCode_sequenceId);
+    return ll_cas.ll_getStringValue(addr, casFeatCode_sequenceId);
   }
   /** @generated */    
-  public void setSequenceId(int addr, int v) {
+  public void setSequenceId(int addr, String v) {
         if (featOkTst && casFeat_sequenceId == null)
       jcas.throwFeatMissing("sequenceId", "edu.cmu.lti.oaqa.framework.types.OutputElement");
-    ll_cas.ll_setIntValue(addr, casFeatCode_sequenceId, v);}
+    ll_cas.ll_setStringValue(addr, casFeatCode_sequenceId, v);}
     
   
  
@@ -86,7 +86,7 @@ public class OutputElement_Type extends Annotation_Type {
     casImpl.getFSClassRegistry().addGeneratorForType((TypeImpl)this.casType, getFSGenerator());
 
  
-    casFeat_sequenceId = jcas.getRequiredFeatureDE(casType, "sequenceId", "uima.cas.Integer", featOkTst);
+    casFeat_sequenceId = jcas.getRequiredFeatureDE(casType, "sequenceId", "uima.cas.String", featOkTst);
     casFeatCode_sequenceId  = (null == casFeat_sequenceId) ? JCas.INVALID_FEATURE_CODE : ((FeatureImpl)casFeat_sequenceId).getCode();
 
  
