@@ -117,6 +117,10 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
             .getConfigParameterValue(BaseExperimentBuilder.EXPERIMENT_UUID_PROPERTY);
     String optDescr = (String) ctx.getConfigParameterValue("options");
     this.options = loadOptions(optDescr, ctx);
+    if (size() == 0) {
+      throw new ResourceInitializationException(new IllegalArgumentException(
+              "Phase: " + toString() + " provided no options"));
+    }
     for (AnalysisEngine ae : options) {
       System.out.println("\t- " + ae.getAnalysisEngineMetaData().getName());
     }
