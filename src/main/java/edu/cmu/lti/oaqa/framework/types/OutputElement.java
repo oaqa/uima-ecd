@@ -11,7 +11,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 
 
 /** 
- * Updated by JCasGen Sat Oct 06 00:13:26 EDT 2012
+ * Updated by JCasGen Fri Jan 18 19:04:09 EST 2013
  * XML source: /Users/elmer/Documents/workspace/oaqa/uima-ecd/src/main/resources/edu/cmu/lti/oaqa/frameworkTypesDescriptor.xml
  * @generated */
 public class OutputElement extends Annotation {
@@ -28,7 +28,7 @@ public class OutputElement extends Annotation {
  
   /** Never called.  Disable default constructor
    * @generated */
-  protected OutputElement() {}
+  protected OutputElement() {/* intentionally empty block */}
     
   /** Internal - constructor used by generator 
    * @generated */

@@ -14,7 +14,7 @@ import org.apache.uima.jcas.cas.TOP;
 
 
 /** 
- * Updated by JCasGen Tue Dec 18 23:01:13 EST 2012
+ * Updated by JCasGen Fri Jan 18 19:04:09 EST 2013
  * XML source: /Users/elmer/Documents/workspace/oaqa/uima-ecd/src/main/resources/edu/cmu/lti/oaqa/frameworkTypesDescriptor.xml
  * @generated */
 public class CurrentExecution extends Annotation {
@@ -31,7 +31,7 @@ public class CurrentExecution extends Annotation {
  
   /** Never called.  Disable default constructor
    * @generated */
-  protected CurrentExecution() {}
+  protected CurrentExecution() {/* intentionally empty block */}
     
   /** Internal - constructor used by generator 
    * @generated */
