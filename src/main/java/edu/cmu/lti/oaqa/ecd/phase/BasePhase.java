@@ -20,10 +20,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -31,11 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPOutputStream;
 
-import mx.bigdata.anyobject.AnyObject;
-import mx.bigdata.anyobject.AnyTuple;
-
 import org.apache.uima.UimaContext;
-import org.apache.uima.analysis_component.AnalysisComponent;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -47,21 +39,12 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.CasCopier;
 import org.uimafit.component.JCasMultiplier_ImplBase;
 import org.uimafit.descriptor.OperationalProperties;
-import org.uimafit.factory.AggregateBuilder;
 import org.uimafit.factory.AnalysisEngineFactory;
 import org.xml.sax.SAXException;
-import org.yaml.snakeyaml.Yaml;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
-import edu.cmu.lti.oaqa.ecd.ResourceHandle;
-import edu.cmu.lti.oaqa.ecd.ResourceHandle.HandleType;
 import edu.cmu.lti.oaqa.ecd.phase.event.PhaseEventBus;
 import edu.cmu.lti.oaqa.ecd.phase.event.TerminateEvent;
 import edu.cmu.lti.oaqa.ecd.util.CasUtils;
@@ -79,11 +62,13 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
 
   private static final String TIMEOUT_KEY = "option-timeout";
 
-  private static final String CROSS_PARAMS_KEY = "cross-opts";
+  private static final String LAZY_LOAD_KEY = "lazy-load-options";
 
   private static final int DEFAULT_OPTION_TIMEOUT = 5;
 
   private AnalysisEngine[] options;
+
+  private AnalysisEngineDescription[] optionDescriptions;
 
   private int nextAnnotator;
 
@@ -92,6 +77,8 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
   private Integer phaseNo;
 
   private Integer optionTimeout;
+
+  private boolean lazyLoadOptions;
 
   private String phaseName;
 
@@ -112,16 +99,26 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     if (optionTimeout == null) {
       this.optionTimeout = DEFAULT_OPTION_TIMEOUT;
     }
+    Boolean lazyLoadOpts = (Boolean) ctx.getConfigParameterValue(LAZY_LOAD_KEY);
+    if (lazyLoadOpts == null) {
+      this.lazyLoadOptions = false;
+    } else {
+      this.lazyLoadOptions = lazyLoadOpts.booleanValue();
+    }
     System.out.println("Phase: " + toString());
     String experimentId = (String) ctx
             .getConfigParameterValue(BaseExperimentBuilder.EXPERIMENT_UUID_PROPERTY);
     String optDescr = (String) ctx.getConfigParameterValue("options");
-    this.options = loadOptions(optDescr, ctx);
-    if (size() == 0) {
-      throw new ResourceInitializationException(new IllegalArgumentException(
-              "Phase: " + toString() + " provided no options"));
+    BasePhaseLoader loader = new BasePhaseLoader();
+    this.optionDescriptions = loader.loadOptionDescriptions(optDescr);
+    if (!lazyLoadOptions) {
+      this.options = loader.loadOptions(optionDescriptions);
     }
-    for (AnalysisEngine ae : options) {
+    if (size() == 0) {
+      throw new ResourceInitializationException(new IllegalArgumentException("Phase: " + toString()
+              + " provided no options"));
+    }
+    for (AnalysisEngineDescription ae : optionDescriptions) {
       System.out.println("\t- " + ae.getAnalysisEngineMetaData().getName());
     }
     System.out.println(" Total # of options configured: " + size());
@@ -139,27 +136,23 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
 
   @Override
   public boolean hasNext() throws AnalysisEngineProcessException {
-    return (nextAnnotator < options.length);
-  }
-
-  @Override
-  public void collectionProcessComplete() throws AnalysisEngineProcessException {
-    for (AnalysisEngine ae : options) {
-      ae.collectionProcessComplete();
-    }
-    executor.shutdown();
+    return (nextAnnotator < optionDescriptions.length);
   }
 
   public Integer getPhaseNo() {
     return phaseNo;
   }
 
+  // We will call the process() method for each of the annotator on this phase,
+  // returning a new CAS for each of them
+  // See
+  // http://uima.apache.org/d/uimaj-2.4.0/apidocs/org/apache/uima/analysis_component/AnalysisComponent.html
   @Override
   public JCas next() throws AnalysisEngineProcessException {
-    AnalysisEngine ae = options[nextAnnotator];
     JCas nextCas = getEmptyJCas();
     try {
       greedyCopy(cas, nextCas);
+      AnalysisEngine ae = getAnalysisEngine();
       try {
         AnnotationIndex<Annotation> prevSteps = nextCas.getAnnotationIndex(ProcessingStep.type);
         String prevCasId = ProcessingStepUtils.getPreviousCasId(prevSteps);
@@ -169,25 +162,48 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
         Trace trace = ProcessingStepUtils.getPartialTrace(prevTrace.getTrace(), getPhaseNo(),
                 optionId);
         if (!loadCasFromStorage(nextCas, trace, sequenceId)) {
-          // TODO: Why do we call process from next() method?
-          // See:
-          // http://uima.apache.org/downloads/releaseDocs/2.3.0-incubating/docs/api/org/apache/uima/analysis_component/JCasMultiplier_ImplBase.html
           process(ae, nextCas, prevCasId, prevTrace, optionId, sequenceId, trace);
         }
-        nextAnnotator++; // TODO:Should this be in a final clause?
+        // TODO:Should this be in a final clause?
+        // Otherwise how would we move on to the next annotator in case of exception?
+        nextAnnotator++;
         return nextCas;
       } catch (Exception e) {
         throw new AnalysisEngineProcessException(e);
+      } finally {
+        if (options != null) {
+          ae.destroy();
+        }
       }
-    } catch(Exception e) {
+    } catch (Exception e) {
       // Release if greedyCopy fails
       nextCas.release();
       throw new AnalysisEngineProcessException(e);
     }
   }
 
+  private AnalysisEngine getAnalysisEngine() throws ResourceInitializationException {
+    if (options != null) {
+      return options[nextAnnotator];
+    } else {
+      AnalysisEngine ae = AnalysisEngineFactory.createAggregate(optionDescriptions[nextAnnotator]);
+      return ae;
+    }
+  }
+
+  @Override
+  public void collectionProcessComplete() throws AnalysisEngineProcessException {
+    if (options != null) {
+      for (AnalysisEngine ae : options) {
+        ae.collectionProcessComplete();
+      }
+    }
+    executor.shutdown();
+  }
+
   private void process(final AnalysisEngine ae, JCas nextCas, String prevCasId, Trace prevTrace,
-          String optionId, String sequenceId, Trace trace) throws IOException, SAXException, Exception {
+          String optionId, String sequenceId, Trace trace) throws IOException, SAXException,
+          Exception {
     long a = System.currentTimeMillis();
     final String uuid = ProcessingStepUtils.getCurrentExperimentId(nextCas);
     final String key = ProcessingStepUtils.getExecutionIdHash(uuid, trace, sequenceId);
@@ -316,181 +332,6 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
   private String getHostName() throws IOException {
     InetAddress addr = InetAddress.getLocalHost();
     return addr.getHostName();
-  }
-
-  private AnalysisEngine[] loadOptions(String options, UimaContext c) {
-    List<AnalysisEngineDescription> aeds = loadOptions(options);
-    List<AnalysisEngine> aes = new ArrayList<AnalysisEngine>();
-    for (AnalysisEngineDescription aeDesc : aeds) {
-      try {
-        aes.add(AnalysisEngineFactory.createAggregate(aeDesc));
-      } catch (ResourceInitializationException e) {
-        e.printStackTrace();
-      }
-    }
-    return aes.toArray(new AnalysisEngine[0]);
-  }
-
-  List<AnalysisEngineDescription> loadOptions(String options) {
-    List<AnalysisEngineDescription> aeds = new ArrayList<AnalysisEngineDescription>();
-    Yaml yaml = new Yaml();
-    @SuppressWarnings("unchecked")
-    List<Map<String, Object>> ao = (List<Map<String, Object>>) yaml.load(options);
-    for (Map<String, Object> optionDescription : ao) {
-      loadOption(optionDescription, aeds);
-    }
-    return aeds;
-  }
-
-  @SuppressWarnings("unchecked")
-  void loadOption(Map<String, Object> description, List<AnalysisEngineDescription> aes) {
-    try {
-      Map.Entry<String, Object> first = getFirst(description);
-      HandleType type = HandleType.getInstance(first.getKey());
-      if (type == HandleType.PIPELINE) {
-        List<Map<String, Object>> pipeline = (List<Map<String, Object>>) first.getValue();
-        List<AnalysisEngineDescription> options = createInnerPipeline(pipeline);
-        aes.addAll(options);
-      } else {
-        String resource = (String) first.getValue();
-        List<AnalysisEngineDescription> options = doLoadOptions(ResourceHandle.newHandle(type,
-                resource));
-        aes.addAll(options);
-      }
-    } catch (Exception e) {
-      System.err.printf("Unable to load option %s caused by:\n", description);
-      Throwable cause = e.getCause();
-      if (cause != null) {
-        cause.printStackTrace();
-      } else {
-        e.printStackTrace();
-      }
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private List<AnalysisEngineDescription> createInnerPipeline(List<Map<String, Object>> pipeline)
-          throws ResourceInitializationException, IOException {
-    List<AnalysisEngineDescription> options = Lists.newArrayList();
-    List<Set<AnalysisEngineDescription>> sets = Lists.newArrayList();
-    for (Map<String, Object> map : pipeline) {
-      try {
-        Map.Entry<String, Object> me = getFirst(map);
-        String type = me.getKey();
-        Object o = me.getValue();
-        if (o instanceof String) {
-          String component = ((String) o).trim();
-          ResourceHandle handle = ResourceHandle.newHandle(type, component);
-          Set<AnalysisEngineDescription> local = Sets.newLinkedHashSet(doLoadOptions(handle));
-          sets.add(local);
-        } else if (o instanceof Iterable) {
-          Iterable<Object> components = (Iterable<Object>) o;
-          Set<AnalysisEngineDescription> local = Sets.newLinkedHashSet();
-          for (Object o2 : components) {
-            if (o2 instanceof Map) {
-              Map<String, Object> component = (Map<String, Object>) o2;
-              List<AnalysisEngineDescription> aes = new ArrayList<AnalysisEngineDescription>();
-              loadOption(component, aes);
-              local.addAll(aes);
-            } else {
-              throw new IllegalArgumentException(
-                      "Illegal experiment descriptor, all options must be specified as a pair 'key: value'");
-            }
-          }
-          sets.add(local);
-        } else {
-          throw new IllegalArgumentException(
-                  "Illegal experiment descriptor, must contain either an iterable or a string");
-        }
-      } catch (Exception e) {
-        System.err.printf("Unable to load option %s caused by:\n", map);
-        Throwable cause = e.getCause();
-        if (cause != null) {
-          cause.printStackTrace();
-        } else {
-          e.printStackTrace();
-        }
-      }
-    }
-    // AED equality is based on equality of the MetaDataObject attributes
-    Set<List<AnalysisEngineDescription>> product = Sets.cartesianProduct(sets);
-    for (List<AnalysisEngineDescription> local : product) {
-      AggregateBuilder builder = new AggregateBuilder();
-      List<String> names = Lists.newArrayList();
-      for (AnalysisEngineDescription aeDesc : local) {
-        builder.add(aeDesc);
-        names.add(aeDesc.getAnalysisEngineMetaData().getName());
-      }
-      String aeName = Joiner.on(";").join(names);
-      AnalysisEngineDescription aee = builder.createAggregateDescription();
-      aee.getAnalysisEngineMetaData().setName(String.format("pipeline:(%s)", aeName));
-      options.add(aee);
-    }
-    return options;
-  }
-
-  private List<AnalysisEngineDescription> doLoadOptions(ResourceHandle handle) throws Exception {
-    List<AnalysisEngineDescription> aes = Lists.newArrayList();
-    Map<String, Object> tuples = Maps.newLinkedHashMap();
-    Class<? extends AnalysisComponent> comp = BaseExperimentBuilder.loadFromClassOrInherit(handle,
-            AnalysisComponent.class, tuples);
-    AnyObject crossParams = (AnyObject) tuples.remove(CROSS_PARAMS_KEY);
-    if (crossParams == null) {
-      AnalysisEngineDescription aeDesc = BaseExperimentBuilder.createAnalysisEngineDescription(
-              tuples, comp);
-      aes.add(aeDesc);
-    } else {
-      List<String> paramNames = getParameterNames(crossParams);
-      Set<List<Object>> product = doCartesianProduct(crossParams);
-      for (List<Object> configuration : product) {
-        Map<String, Object> inner = Maps.newLinkedHashMap(tuples);
-        setInnerParams(paramNames, configuration, inner);
-        AnalysisEngineDescription aeDesc = BaseExperimentBuilder.createAnalysisEngineDescription(
-                inner, comp);
-        aes.add(aeDesc);
-      }
-    }
-    return aes;
-  }
-
-  private List<String> getParameterNames(AnyObject crossParams) {
-    List<String> names = Lists.newArrayList(); // parameter names
-    for (AnyTuple tuple : crossParams.getTuples()) {
-      String key = tuple.getKey();
-      names.add(key);
-    }
-    return names;
-  }
-
-  private Set<List<Object>> doCartesianProduct(AnyObject crossParams) {
-    List<Set<Object>> sets = Lists.newArrayList(); // input parameters
-    List<String> names = Lists.newArrayList(); // parameter names
-    for (AnyTuple tuple : crossParams.getTuples()) {
-      Set<Object> params = Sets.newHashSet();
-      String key = tuple.getKey();
-      names.add(key);
-      @SuppressWarnings("unchecked")
-      Iterable<Object> values = (Iterable<Object>) tuple.getObject();
-      for (Object value : values) {
-        params.add(value);
-      }
-      sets.add(params);
-    }
-    Set<List<Object>> product = Sets.cartesianProduct(sets);
-    return product;
-  }
-
-  private void setInnerParams(List<String> paramNames, List<Object> configuration,
-          Map<String, Object> inner) {
-    for (int i = 0; i < paramNames.size(); i++) {
-      String key = paramNames.get(i);
-      Object value = configuration.get(i);
-      inner.put(key, value);
-    }
-  }
-
-  private Map.Entry<String, Object> getFirst(Map<String, Object> map) {
-    return Iterators.get(map.entrySet().iterator(), 0);
   }
 
   @Override

@@ -73,10 +73,10 @@ public class BasePhaseTest {
           phaseDescription);
       if (aed.getImplementationName().equalsIgnoreCase(
           BasePhase.class.getName())) {
-        BasePhase bp = new BasePhase();
         String optDescr = (String) aed.getAnalysisEngineMetaData()
                 .getConfigurationParameterSettings().getParameterValue("options");
-        List<AnalysisEngineDescription> options = bp.loadOptions(optDescr);
+        BasePhaseLoader loader = new BasePhaseLoader();
+        List<AnalysisEngineDescription> options = loader.loadOptions(optDescr);
         assertThat(options.size(), is(equalTo(sizes[i++])));
       }
     }
