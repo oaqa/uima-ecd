@@ -16,7 +16,10 @@
 
 package edu.cmu.lti.oaqa.ecd;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,11 +43,13 @@ import org.apache.uima.resource.CustomResourceSpecifier;
 import org.apache.uima.resource.Resource;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.impl.CustomResourceSpecifier_impl;
+import org.apache.uima.resource.metadata.TypePriorities;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.uimafit.factory.AggregateBuilder;
 import org.uimafit.factory.AnalysisEngineFactory;
 import org.uimafit.factory.CollectionReaderFactory;
 import org.uimafit.factory.FlowControllerFactory;
+import org.uimafit.factory.TypePrioritiesFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.base.Function;
@@ -79,6 +84,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   private final AnyObject configuration;
 
   private final ExperimentPersistenceProvider persistence;
+  
+  private TypePriorities typePriorities = (TypePriorities) null;
 
   public BaseExperimentBuilder(String experimentUuid, String resource,
           TypeSystemDescription typeSystem) throws Exception {
@@ -152,6 +159,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   @Override
   public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId,
           FixedFlow funnel, boolean outputNewCASes) throws Exception {
+    loadTypePriorities(config);
     Iterable<AnyObject> iterable = config.getIterable(pipeline);
     FlowControllerDescription fcd = FlowControllerFactory
             .createFlowControllerDescription(FixedFlowController797182.class);
@@ -178,6 +186,52 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     return builder.createAggregateDescription();
   }
 
+ 
+
+  private String[] getFromListOrInherit(AnyObject descriptor, String listName) throws IOException{
+    
+    Iterable<String> iterable = descriptor.getIterable(listName);
+    if(iterable != null){
+      Iterator<String> tpIterator = iterable.iterator();
+      ArrayList<String> typePrioritiesList = new ArrayList<String>();
+      while(tpIterator.hasNext()){
+        String type = tpIterator.next();
+          typePrioritiesList.add(type);
+          System.out.println("Loaded type priorities:" + type);
+      }
+      String[] typePrioritiesArray = typePrioritiesList.toArray(new String[typePrioritiesList.size()]);
+      return typePrioritiesArray;
+    }else{
+      String resource = descriptor.getString("inherit");
+      if (resource != null) {
+        AnyObject yaml = ConfigurationLoader.load(resource);
+        return getFromListOrInherit(yaml, listName);
+      } else {
+        throw new IllegalArgumentException(
+            "Illegal experiment descriptor, must contain one list of type <"+listName+"> or <inherit>");
+      }
+    }
+  }
+  
+  // Load type priorities
+  private void loadTypePriorities(AnyObject config){
+
+    AnyObject tpObject = config.getAnyObject("type-priorities");
+    if(tpObject == null){
+      return;
+    }
+    
+    String[] typePrioritiesArray;
+    try {
+      typePrioritiesArray = getFromListOrInherit(tpObject, "type-list");
+      this.typePriorities = TypePrioritiesFactory.createTypePriorities(typePrioritiesArray);
+    } catch (IOException e) {
+      System.err.println("Failed to load type-priorities.");
+      e.printStackTrace();
+    }
+  }
+
+  
   // Made this method public to invoke it from BasePhaseTest
   public AnalysisEngineDescription buildComponent(int stageId, int phase, AnyObject aeDescription)
           throws Exception {
@@ -189,7 +243,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
             AnalysisComponent.class, tuples);
     Object[] params = getParamList(tuples);
     AnalysisEngineDescription description = AnalysisEngineFactory.createPrimitiveDescription(ac,
-            typeSystem, params);
+            typeSystem,typePriorities, params);
     String name = (String) tuples.get("name");
     description.getAnalysisEngineMetaData().setName(name);
     return description;
