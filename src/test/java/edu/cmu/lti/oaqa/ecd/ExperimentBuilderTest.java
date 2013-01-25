@@ -49,6 +49,16 @@ public class ExperimentBuilderTest {
   public void testSetupStagedPipeline() throws Exception {
     testPipelineSetup("test.partial-ecd-example");
   }
+  
+  @Test
+  public void testDirectLoadTypePrioritiesPipeline() throws Exception {
+    testPipelineSetup("test.type-priorities.direct-type-priorities-test");
+  }
+  
+  @Test
+  public void testInheritLoadTypePrioritiesPipeline() throws Exception {
+    testPipelineSetup("test.type-priorities.inherit-type-priorities-test");
+  }
 
   void testPipelineSetup(String resource) throws Exception {
     ExperimentBuilder builder = setupExperimentBuilder(resource);

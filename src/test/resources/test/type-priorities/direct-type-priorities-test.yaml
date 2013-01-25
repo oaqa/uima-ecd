@@ -1,0 +1,18 @@
+configuration:
+  name: direct-type-priorities-test
+  author: junit
+  
+type-priorities: 
+  type-list: 
+    - edu.cmu.lti.oaqa.framework.types.InputElement
+    - edu.cmu.lti.oaqa.framework.types.OutputElement
+    - edu.cmu.lti.oaqa.framework.types.ProcessingStep
+  
+collection-reader:
+  inherit: test.collection.reader
+
+pipeline:
+  - inherit: ecd.phase
+    name: first-phase
+    options: |
+      - inherit: test.first-phase-annotator-a

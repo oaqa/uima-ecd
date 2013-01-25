@@ -1,0 +1,4 @@
+type-list: 
+    - edu.cmu.lti.oaqa.framework.types.InputElement
+    - edu.cmu.lti.oaqa.framework.types.OutputElement
+    - edu.cmu.lti.oaqa.framework.types.ProcessingStep
