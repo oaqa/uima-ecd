@@ -340,6 +340,6 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
   }
 
   int size() {
-    return options.length;
+    return optionDescriptions.length;
   }
 }
