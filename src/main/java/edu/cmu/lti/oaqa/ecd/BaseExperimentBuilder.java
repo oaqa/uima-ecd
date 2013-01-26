@@ -84,7 +84,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   private final AnyObject configuration;
 
   private final ExperimentPersistenceProvider persistence;
-  
+
   private TypePriorities typePriorities = (TypePriorities) null;
 
   public BaseExperimentBuilder(String experimentUuid, String resource,
@@ -186,44 +186,36 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     return builder.createAggregateDescription();
   }
 
- 
-
-  private String[] getFromListOrInherit(AnyObject descriptor, String listName) throws IOException{
-    
+  private String[] getFromListOrInherit(AnyObject descriptor, String listName) throws IOException {
     Iterable<String> iterable = descriptor.getIterable(listName);
-    if(iterable != null){
-      Iterator<String> tpIterator = iterable.iterator();
+    if (iterable != null) {
       ArrayList<String> typePrioritiesList = new ArrayList<String>();
-      while(tpIterator.hasNext()){
-        String type = tpIterator.next();
-          typePrioritiesList.add(type);
-          System.out.println("Loaded type priorities:" + type);
+      for (String type : iterable) {
+        typePrioritiesList.add(type);
+        System.out.println("Loaded type priorities: " + type);
       }
-      String[] typePrioritiesArray = typePrioritiesList.toArray(new String[typePrioritiesList.size()]);
-      return typePrioritiesArray;
-    }else{
+      return typePrioritiesList.toArray(new String[0]);
+    } else {
       String resource = descriptor.getString("inherit");
       if (resource != null) {
         AnyObject yaml = ConfigurationLoader.load(resource);
         return getFromListOrInherit(yaml, listName);
       } else {
         throw new IllegalArgumentException(
-            "Illegal experiment descriptor, must contain one list of type <"+listName+"> or <inherit>");
+                "Illegal experiment descriptor, must contain one list of type <" + listName
+                        + "> or <inherit>");
       }
     }
   }
-  
-  // Load type priorities
-  private void loadTypePriorities(AnyObject config){
 
+  // Load type priorities
+  private void loadTypePriorities(AnyObject config) {
     AnyObject tpObject = config.getAnyObject("type-priorities");
-    if(tpObject == null){
+    if (tpObject == null) {
       return;
     }
-    
-    String[] typePrioritiesArray;
     try {
-      typePrioritiesArray = getFromListOrInherit(tpObject, "type-list");
+      String[] typePrioritiesArray = getFromListOrInherit(tpObject, "type-list");
       this.typePriorities = TypePrioritiesFactory.createTypePriorities(typePrioritiesArray);
     } catch (IOException e) {
       System.err.println("Failed to load type-priorities.");
@@ -231,7 +223,6 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
   }
 
-  
   // Made this method public to invoke it from BasePhaseTest
   public AnalysisEngineDescription buildComponent(int stageId, int phase, AnyObject aeDescription)
           throws Exception {
@@ -243,7 +234,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
             AnalysisComponent.class, tuples);
     Object[] params = getParamList(tuples);
     AnalysisEngineDescription description = AnalysisEngineFactory.createPrimitiveDescription(ac,
-            typeSystem,typePriorities, params);
+            typeSystem, typePriorities, params);
     String name = (String) tuples.get("name");
     description.getAnalysisEngineMetaData().setName(name);
     return description;
