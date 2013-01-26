@@ -1,0 +1,15 @@
+configuration:
+  name: inherit-type-priorities-test
+  author: junit
+  
+type-priorities: 
+  inherit: test.type-priorities.test-type-priorities
+  
+collection-reader:
+  inherit: test.collection.reader
+
+pipeline:
+  - inherit: ecd.phase
+    name: first-phase
+    options: |
+      - inherit: test.first-phase-annotator-a
