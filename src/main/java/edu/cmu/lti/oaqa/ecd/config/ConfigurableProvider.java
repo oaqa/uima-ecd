@@ -25,18 +25,19 @@ import org.apache.uima.resource.Resource_ImplBase;
 import com.google.common.collect.Maps;
 
 public abstract class ConfigurableProvider extends Resource_ImplBase {
-  
-  private Map<String, Object> params;
-  
-  @Override
-  public boolean initialize(ResourceSpecifier aSpecifier, Map<String, Object> aAdditionalParams)
-    throws ResourceInitializationException {
-    super.initialize(aSpecifier, aAdditionalParams);
-    this.params = Maps.newHashMap(aAdditionalParams);
-    return true;
-  }
-  
-  protected Object getParameterValue(String name) {
-    return params.get(name);
-  }
+
+	private Map<String, Object> params;
+
+	@Override
+	public boolean initialize(ResourceSpecifier aSpecifier,
+			Map<String, Object> aAdditionalParams)
+			throws ResourceInitializationException {
+		super.initialize(aSpecifier, aAdditionalParams);
+		this.params = Maps.newHashMap(aAdditionalParams);
+		return true;
+	}
+
+	protected Object getParameterValue(String name) {
+		return params.get(name);
+	}
 }

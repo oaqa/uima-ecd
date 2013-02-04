@@ -17,5 +17,5 @@
 package edu.cmu.lti.oaqa.ecd.phase;
 
 public enum ExecutionStatus {
-  SUCCESS,FAILURE,TIMEOUT
+	SUCCESS, FAILURE, TIMEOUT
 }

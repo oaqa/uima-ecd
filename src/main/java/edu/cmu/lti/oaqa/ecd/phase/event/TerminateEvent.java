@@ -18,14 +18,14 @@ package edu.cmu.lti.oaqa.ecd.phase.event;
 
 public class TerminateEvent {
 
-  private final String idHash;
-  
-  public TerminateEvent(String idHash) {
-    this.idHash = idHash;
-  }
-  
-  public String getIdHash() {
-    return idHash;
-  }
+	private final String idHash;
+
+	public TerminateEvent(String idHash) {
+		this.idHash = idHash;
+	}
+
+	public String getIdHash() {
+		return idHash;
+	}
 
 }

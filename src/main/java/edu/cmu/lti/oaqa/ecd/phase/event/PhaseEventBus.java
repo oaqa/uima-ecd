@@ -22,14 +22,14 @@ import edu.cmu.lti.oaqa.ecd.phase.TerminableComponent;
 
 public final class PhaseEventBus {
 
-  private final static EventBus EVENTBUS = new EventBus();
+	private final static EventBus EVENTBUS = new EventBus();
 
-  public static void sendTerminateEvent(TerminateEvent event) {
-    EVENTBUS.post(event);
-  }
-  
-  public static void registerForTerminateEvent(TerminableComponent listener) {
-    EVENTBUS.register(listener);
-  }
+	public static void sendTerminateEvent(TerminateEvent event) {
+		EVENTBUS.post(event);
+	}
+
+	public static void registerForTerminateEvent(TerminableComponent listener) {
+		EVENTBUS.register(listener);
+	}
 
 }

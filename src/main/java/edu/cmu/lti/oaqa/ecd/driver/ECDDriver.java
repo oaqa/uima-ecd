@@ -41,58 +41,96 @@ import edu.cmu.lti.oaqa.ecd.impl.DefaultFunnelingStrategy;
 
 public final class ECDDriver {
 
-  private final ExperimentBuilder builder;
+	private final ExperimentBuilder builder;
+	private final AnyObject config;
+	private final List<Long> processedItems = Lists.newArrayList();
 
-  private final AnyObject config;
+	/**
+	 * Constructor.
+	 * @param resource path to YAML descriptor
+	 * @param uuid Unique experiment ID
+	 * @throws Exception
+	 */
+	public ECDDriver(String resource, String uuid) throws Exception {
+		// Create new (empty?) type system description
+		TypeSystemDescription typeSystem = TypeSystemDescriptionFactory
+				.createTypeSystemDescription();
+		// Instantiate a experiment builder with a unique experiment ID
+		// and a given YAML file ('resource')
+		this.builder = new BaseExperimentBuilder(uuid, resource, typeSystem);
+		this.config = builder.getConfiguration();
+	}
 
-  private final List<Long> processedItems = Lists.newArrayList();
-  
-  public ECDDriver(String resource, String uuid) throws Exception {
-    TypeSystemDescription typeSystem = TypeSystemDescriptionFactory.createTypeSystemDescription();
-    this.builder = new BaseExperimentBuilder(uuid, resource, typeSystem);
-    this.config = builder.getConfiguration();
-  }
+	/**
+	 * Run the experiment!
+	 * @throws Exception
+	 */
+	public void run() throws Exception {
+		// Create a new Stage config from the YAML config object
+		StagedConfiguration stagedConfig = new StagedConfigurationImpl(config);
+		FunnelingStrategy ps = getProcessingStrategy();
+		for (Stage stage : stagedConfig) {
+			FunneledFlow funnel = ps.newFunnelStrategy(builder
+					.getExperimentUuid());
+			AnyObject conf = stage.getConfiguration();
+			CollectionReader reader = builder.buildCollectionReader(conf,
+					stage.getId());
+			AnalysisEngine pipeline = builder.buildPipeline(conf, "pipeline",
+					stage.getId(), funnel);
+			if (conf.getIterable("post-process") != null) {
+				AnalysisEngine post = builder.buildPipeline(conf,
+						"post-process", stage.getId());
+				SimplePipelineRev803.runPipeline(reader, pipeline, post);
+			} else {
+				SimplePipelineRev803.runPipeline(reader, pipeline);
+			}
+			Progress progress = reader.getProgress()[0];
+			long total = progress.getCompleted();
+			processedItems.add(total);
+		}
+	}
 
-  public void run() throws Exception {
-    StagedConfiguration stagedConfig = new StagedConfigurationImpl(config);
-    FunnelingStrategy ps = getProcessingStrategy();
-    for (Stage stage : stagedConfig) {
-      FunneledFlow funnel = ps.newFunnelStrategy(builder.getExperimentUuid());
-      AnyObject conf = stage.getConfiguration();
-      CollectionReader reader = builder.buildCollectionReader(conf, stage.getId());
-      AnalysisEngine pipeline = builder.buildPipeline(conf, "pipeline", stage.getId(), funnel);
-      if (conf.getIterable("post-process") != null) {
-        AnalysisEngine post = builder.buildPipeline(conf, "post-process", stage.getId());
-        SimplePipelineRev803.runPipeline(reader, pipeline, post);
-      } else {
-        SimplePipelineRev803.runPipeline(reader, pipeline);
-      }
-      Progress progress = reader.getProgress()[0];
-      long total = progress.getCompleted();
-      processedItems.add(total);
-    }
-  }
-  
-  private FunnelingStrategy getProcessingStrategy() throws ResourceInitializationException {
-    FunnelingStrategy ps = new DefaultFunnelingStrategy();
-    AnyObject map = config.getAnyObject("processing-strategy");
-    if (map != null) {
-      ps = BaseExperimentBuilder.loadProvider(map, FunnelingStrategy.class);
-    }
-    return ps;
-  }
-  
-  Iterable<Long> getProcessedItems() {
-    return processedItems;
-  }
+	/**
+	 * 
+	 * @return
+	 * @throws ResourceInitializationException
+	 */
+	private FunnelingStrategy getProcessingStrategy()
+			throws ResourceInitializationException {
+		// Create an 'empty' Funneling Strategy
+		FunnelingStrategy ps = new DefaultFunnelingStrategy();
+		// 
+		AnyObject map = config.getAnyObject("processing-strategy");
+		if (map != null) {
+			ps = BaseExperimentBuilder.loadProvider(map,
+					FunnelingStrategy.class);
+		}
+		return ps;
+	}
 
-  public static void main(String[] args) throws Exception {
-    String uuid = UUID.randomUUID().toString();    
-    if (args.length > 1) {
-      uuid = args[1];
-    }
-    System.out.println("Experiment UUID: " + uuid);
-    ECDDriver driver = new ECDDriver(args[0], uuid);
-    driver.run();
-  }
+	Iterable<Long> getProcessedItems() {
+		return processedItems;
+	}
+
+	/**
+	 * This is what runs when we do an experiment!
+	 * @param args command line arguments
+	 * 	path to YAML descriptor
+	 * 	optional experiment ID
+	 * @throws Exception
+	 */
+	public static void main(String[] args) throws Exception {
+		// Generate ID string for experiment
+		String uuid = UUID.randomUUID().toString();
+		// If no ID supplied, generate ID
+		if (args.length > 1) {
+			uuid = args[1];
+		}
+		System.out.println("Experiment UUID: " + uuid);
+		// Instantiate driver with path to YAML descriptor (?) 
+		// and experiment ID
+		ECDDriver driver = new ECDDriver(args[0], uuid);
+		// Run experiment!
+		driver.run();
+	}
 }

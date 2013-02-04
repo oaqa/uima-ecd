@@ -17,47 +17,48 @@
 package edu.cmu.lti.oaqa.ecd;
 
 public class ResourceHandle {
-  
-  public enum HandleType {
-    INHERIT, CLASS, PIPELINE;
-    
-    public static HandleType getInstance(String value) {
-      return HandleType.valueOf(value.toUpperCase());
-    }
-  }
-  
-  private final HandleType type;
 
-  final String resource;
+	public enum HandleType {
+		INHERIT, CLASS, PIPELINE;
 
-  private ResourceHandle(HandleType type, String resource) {
-    this.type = type;
-    this.resource = resource;
-  }
+		public static HandleType getInstance(String value) {
+			return HandleType.valueOf(value.toUpperCase());
+		}
+	}
 
-  public static ResourceHandle newInheritHandle(String resource) {
-    return new ResourceHandle(HandleType.INHERIT, resource);
-  }
+	private final HandleType type;
 
-  public static ResourceHandle newHandle(String type, String resource) {
-    try {
-      return new ResourceHandle(HandleType.valueOf(type.toUpperCase()), resource);
-    } catch (Exception e) {
-      throw new IllegalArgumentException(
-              "Illegal experiment descriptor, must contain one node of type <class> or <inherit>");
-    }
-  }
+	final String resource;
 
-  public static ResourceHandle newHandle(HandleType type, String resource) {
-    return new ResourceHandle(type, resource);
-  }
+	private ResourceHandle(HandleType type, String resource) {
+		this.type = type;
+		this.resource = resource;
+	}
 
-  HandleType getType() {
-    return type;
-  }
-  
-  @Override
-  public String toString() {
-    return String.format("%s[%s]", type.toString().toLowerCase(), resource);
-  }
+	public static ResourceHandle newInheritHandle(String resource) {
+		return new ResourceHandle(HandleType.INHERIT, resource);
+	}
+
+	public static ResourceHandle newHandle(String type, String resource) {
+		try {
+			return new ResourceHandle(HandleType.valueOf(type.toUpperCase()),
+					resource);
+		} catch (Exception e) {
+			throw new IllegalArgumentException(
+					"Illegal experiment descriptor, must contain one node of type <class> or <inherit>");
+		}
+	}
+
+	public static ResourceHandle newHandle(HandleType type, String resource) {
+		return new ResourceHandle(type, resource);
+	}
+
+	HandleType getType() {
+		return type;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("%s[%s]", type.toString().toLowerCase(), resource);
+	}
 }

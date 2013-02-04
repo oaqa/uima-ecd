@@ -17,6 +17,6 @@
 package edu.cmu.lti.oaqa.ecd.phase;
 
 public interface CasDeserializer {
-  
-  boolean processedCas();
+
+	boolean processedCas();
 }

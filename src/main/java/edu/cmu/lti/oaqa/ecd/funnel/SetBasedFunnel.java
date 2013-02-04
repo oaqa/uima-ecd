@@ -27,16 +27,24 @@ import edu.cmu.lti.oaqa.ecd.phase.Trace;
 
 public class SetBasedFunnel extends FixedFlow_impl implements FunneledFlow {
 
-  private static final long serialVersionUID = -8276851415955188563L;
+	private static final long serialVersionUID = -8276851415955188563L;
+	private final Set<String> set;
 
-  private final Set<String> set;
+	/**
+	 * Constructor.
+	 * Create a new set of of trace String's.
+	 * @param traces
+	 */
+	public SetBasedFunnel(Iterable<String> traces) {
+		this.set = Sets.newHashSet(traces);
+	}
 
-  public SetBasedFunnel(Iterable<String> traces) {
-    this.set = Sets.newHashSet(traces);
-  }
-
-  @Override
-  public boolean funnel(Trace trace) {
-    return set.contains(trace.getTraceHash());
-  }
+	@Override
+	/**
+	 * Is 'trace' in this Funnel?
+	 * @param trace 
+	 */
+	public boolean funnel(Trace trace) {
+		return set.contains(trace.getTraceHash());
+	}
 }

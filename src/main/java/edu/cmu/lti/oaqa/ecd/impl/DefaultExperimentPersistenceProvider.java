@@ -18,22 +18,27 @@ package edu.cmu.lti.oaqa.ecd.impl;
 
 import java.util.Set;
 
-public final class DefaultExperimentPersistenceProvider extends AbstractExperimentPersistenceProvider {
-  
-  @Override
-  public void insertExperiment(String id, String name, String author,
-          String configuration, String resource) throws Exception {
-    // Do nothing
-  }
+/**
+ * Empty persistence provider (to maintain compatibility).
+ */
+public final class DefaultExperimentPersistenceProvider extends
+		AbstractExperimentPersistenceProvider {
 
-  @Override
-  public void updateExperimentMeta(String experimentId, int size) {
-    // Do nothing
-  }
+	@Override
+	public void insertExperiment(String id, String name, String author,
+			String configuration, String resource) throws Exception {
+		// Do nothing
+	}
 
-  @Override
-  public void updateExperimentMeta(String experimentId, int size, Set<String> topics) {
-    // TODO Auto-generated method stub
-    
-  }
+	@Override
+	public void updateExperimentMeta(String experimentId, int size) {
+		// Do nothing
+	}
+
+	@Override
+	public void updateExperimentMeta(String experimentId, int size,
+			Set<String> topics) {
+		// Do nothing
+
+	}
 }

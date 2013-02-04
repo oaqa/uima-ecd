@@ -19,6 +19,7 @@ package edu.cmu.lti.oaqa.ecd.impl;
 import edu.cmu.lti.oaqa.ecd.ExperimentPersistenceProvider;
 import edu.cmu.lti.oaqa.ecd.config.ConfigurableProvider;
 
-public abstract class AbstractExperimentPersistenceProvider extends ConfigurableProvider implements ExperimentPersistenceProvider {
+public abstract class AbstractExperimentPersistenceProvider extends
+		ConfigurableProvider implements ExperimentPersistenceProvider {
 
 }

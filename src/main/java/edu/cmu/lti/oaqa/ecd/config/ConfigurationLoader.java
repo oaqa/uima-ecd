@@ -29,32 +29,58 @@ import com.google.common.io.CharStreams;
 
 public class ConfigurationLoader {
 
-  public static String getResourceLocation(String resource, boolean fullpath) {
-    String parsed = resource.replace(".", "/");
-    return (fullpath ? "/" : "") + parsed + ".yaml";
-  }
+	/**
+	 * Converts YAML 'package' path to fully qualified path.
+	 * @param resource path to YAML descriptor
+	 * @param fullpath flag to return the entire file path
+	 * @return full file path
+	 */
+	public static String getResourceLocation(String resource, boolean fullpath) {
+		String parsed = resource.replace(".", "/");
+		return (fullpath ? "/" : "") + parsed + ".yaml";
+	}
 
-  public static AnyObject load(String resource) throws IOException {
-    String resourceLocation = getResourceLocation(resource, true);
-    InputStream in = ConfigurationLoader.class.getResourceAsStream(resourceLocation);
-    if (in == null) {
-      throw new FileNotFoundException(resourceLocation + " is not present on classpath");
-    }
-    try {
-      return SnakeYAMLLoader.getInstance().load(in);
-    } finally {
-      in.close();
-    }
-  }
+	/**
+	 * Load a YAML file and return object representation of the file
+	 * in SnakeYaml
+	 * @param resource path to YAML descriptor
+	 * @return YAML file object
+	 * @throws IOException
+	 */
+	public static AnyObject load(String resource) throws IOException {
+		String resourceLocation = getResourceLocation(resource, true);
+		// Reads YAML file as InputStream
+		InputStream in = ConfigurationLoader.class
+				.getResourceAsStream(resourceLocation);
+		if (in == null) {
+			throw new FileNotFoundException(resourceLocation
+					+ " is not present on classpath");
+		}
+		// Parse YAML file, return AnyObject
+		try {
+			return SnakeYAMLLoader.getInstance().load(in);
+		} finally {
+			in.close();
+		}
+	}
 
-  public static String getString(String resource) throws IOException {
-    String resourceLocation = ConfigurationLoader.getResourceLocation(resource, true);
-    InputStream in = ConfigurationLoader.class.getResourceAsStream(resourceLocation);
-    try {
-      Reader reader = new InputStreamReader(in);
-      return CharStreams.toString(reader);
-    } finally {
-      in.close();
-    }
-  }
+	/**
+	 * Dump the YAML file to String.
+	 * @param resource path to the YAML file 
+	 * @return Contents of the YAML file as a String
+	 * @throws IOException
+	 */
+	public static String getString(String resource) throws IOException {
+		// 
+		String resourceLocation = ConfigurationLoader.getResourceLocation(
+				resource, true);
+		InputStream in = ConfigurationLoader.class
+				.getResourceAsStream(resourceLocation);
+		try {
+			Reader reader = new InputStreamReader(in);
+			return CharStreams.toString(reader);
+		} finally {
+			in.close();
+		}
+	}
 }

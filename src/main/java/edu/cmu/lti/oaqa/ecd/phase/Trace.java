@@ -21,42 +21,42 @@ import com.google.common.hash.Hashing;
 
 public final class Trace {
 
-  private static final HashFunction hf = Hashing.sha256();
-  
-  private final String trace;
-  
-  private final String traceId;
-  
-  public Trace(String trace) {
-    this.trace = trace;
-    this.traceId = hf.hashString(trace).toString();
-  }
-  
-  public int hashCode() {
-    return trace.hashCode();
-  }
-  
-  public boolean equals(Object o) {
-    if (o == this) {
-      return true;
-    }
-    if (!(o instanceof Trace)) {
-      return false;
-    }
-    Trace t = (Trace) o; 
-    return trace.equals(t.trace);
-  }
-  
-  public String getTrace() {
-    return trace;
-  }
-  
-  public String getTraceHash() {
-    return traceId;
-  }
-  
-  public String toString() {
-    return trace;
-  }
-  
+	private static final HashFunction hf = Hashing.sha256();
+
+	private final String trace;
+
+	private final String traceId;
+
+	public Trace(String trace) {
+		this.trace = trace;
+		this.traceId = hf.hashString(trace).toString();
+	}
+
+	public int hashCode() {
+		return trace.hashCode();
+	}
+
+	public boolean equals(Object o) {
+		if (o == this) {
+			return true;
+		}
+		if (!(o instanceof Trace)) {
+			return false;
+		}
+		Trace t = (Trace) o;
+		return trace.equals(t.trace);
+	}
+
+	public String getTrace() {
+		return trace;
+	}
+
+	public String getTraceHash() {
+		return traceId;
+	}
+
+	public String toString() {
+		return trace;
+	}
+
 }

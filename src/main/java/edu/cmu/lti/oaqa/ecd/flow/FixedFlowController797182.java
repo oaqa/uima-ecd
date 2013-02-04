@@ -60,222 +60,250 @@ import edu.cmu.lti.oaqa.framework.types.ProcessingStep;
  */
 public class FixedFlowController797182 extends CasFlowController_ImplBase {
 
-  /**
-   * Key for the configuration parameter that determines what should happen to a CAS after it has
-   * been input to a CAS Multiplier. Possible values are: continue: the CAS continues on to the next
-   * element in the flow stop: the CAS will no longer continue in the flow, and will be returned
-   * from the aggregate if possible. drop: the CAS will no longer continue in the flow, and will be
-   * dropped (not returned from the aggregate) if possible. dropIfNewCasProduced (the default): if
-   * the CAS multiplier produced a new CAS as a result of processing this CAS, then this CAS will be
-   * dropped. If not, then this CAS will continue.
-   */
-  public static final String PARAM_ACTION_AFTER_CAS_MULTIPLIER = "ActionAfterCasMultiplier";
+	/**
+	 * Key for the configuration parameter that determines what should happen to
+	 * a CAS after it has been input to a CAS Multiplier. Possible values are:
+	 * continue: the CAS continues on to the next element in the flow stop: the
+	 * CAS will no longer continue in the flow, and will be returned from the
+	 * aggregate if possible. drop: the CAS will no longer continue in the flow,
+	 * and will be dropped (not returned from the aggregate) if possible.
+	 * dropIfNewCasProduced (the default): if the CAS multiplier produced a new
+	 * CAS as a result of processing this CAS, then this CAS will be dropped. If
+	 * not, then this CAS will continue.
+	 */
+	public static final String PARAM_ACTION_AFTER_CAS_MULTIPLIER = "ActionAfterCasMultiplier";
 
-  private static final int ACTION_CONTINUE = 0;
+	private static final int ACTION_CONTINUE = 0;
 
-  private static final int ACTION_STOP = 1;
+	private static final int ACTION_STOP = 1;
 
-  private static final int ACTION_DROP = 2;
+	private static final int ACTION_DROP = 2;
 
-  private static final int ACTION_DROP_IF_NEW_CAS_PRODUCED = 3;
+	private static final int ACTION_DROP_IF_NEW_CAS_PRODUCED = 3;
 
-  private List<String> mSequence;
+	private List<String> mSequence;
 
-  private int mActionAfterCasMultiplier;
-  
-  @Nullable
-  private FunneledFlow funnel;
+	private int mActionAfterCasMultiplier;
 
-  public void initialize(FlowControllerContext aContext) throws ResourceInitializationException {
-    super.initialize(aContext);
-    FlowConstraints flowConstraints = aContext.getAggregateMetadata().getFlowConstraints();
-    mSequence = new ArrayList<String>();
-    if (flowConstraints instanceof FixedFlow) {
-      String[] sequence = ((FixedFlow) flowConstraints).getFixedFlow();
-      mSequence.addAll(Arrays.asList(sequence));
-    } else {
-      throw new ResourceInitializationException(
-              ResourceInitializationException.FLOW_CONTROLLER_REQUIRES_FLOW_CONSTRAINTS,
-              new Object[] { this.getClass().getName(), "fixedFlow",
-                  aContext.getAggregateMetadata().getSourceUrlString() });
-    }
-    if (flowConstraints instanceof FunneledFlow) {
-      this.funnel = (FunneledFlow) aContext.getAggregateMetadata().getFlowConstraints();
-    }
-    String actionAfterCasMultiplier = (String) aContext
-            .getConfigParameterValue(PARAM_ACTION_AFTER_CAS_MULTIPLIER);
-    if ("continue".equalsIgnoreCase(actionAfterCasMultiplier)) {
-      mActionAfterCasMultiplier = ACTION_CONTINUE;
-    } else if ("stop".equalsIgnoreCase(actionAfterCasMultiplier)) {
-      mActionAfterCasMultiplier = ACTION_STOP;
-    } else if ("drop".equalsIgnoreCase(actionAfterCasMultiplier)) {
-      mActionAfterCasMultiplier = ACTION_DROP;
-    } else if ("dropIfNewCasProduced".equalsIgnoreCase(actionAfterCasMultiplier)) {
-      mActionAfterCasMultiplier = ACTION_DROP_IF_NEW_CAS_PRODUCED;
-    } else if (actionAfterCasMultiplier == null) {
-      mActionAfterCasMultiplier = ACTION_DROP_IF_NEW_CAS_PRODUCED; // default
-    } else {
-      throw new ResourceInitializationException(
-              ResourceInitializationException.INVALID_ACTION_AFTER_CAS_MULTIPLIER,
-              new Object[] { actionAfterCasMultiplier });
-    }
-  }
+	@Nullable
+	private FunneledFlow funnel;
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.apache.uima.flow.CasFlowController_ImplBase#computeFlow(org.apache.uima.cas.CAS)
-   */
-  public Flow computeFlow(CAS aCAS) throws AnalysisEngineProcessException {
-    return new FixedFlowObject(0);
-  }
+	public void initialize(FlowControllerContext aContext)
+			throws ResourceInitializationException {
+		super.initialize(aContext);
+		FlowConstraints flowConstraints = aContext.getAggregateMetadata()
+				.getFlowConstraints();
+		mSequence = new ArrayList<String>();
+		if (flowConstraints instanceof FixedFlow) {
+			String[] sequence = ((FixedFlow) flowConstraints).getFixedFlow();
+			mSequence.addAll(Arrays.asList(sequence));
+		} else {
+			throw new ResourceInitializationException(
+					ResourceInitializationException.FLOW_CONTROLLER_REQUIRES_FLOW_CONSTRAINTS,
+					new Object[] {
+							this.getClass().getName(),
+							"fixedFlow",
+							aContext.getAggregateMetadata()
+									.getSourceUrlString() });
+		}
+		if (flowConstraints instanceof FunneledFlow) {
+			this.funnel = (FunneledFlow) aContext.getAggregateMetadata()
+					.getFlowConstraints();
+		}
+		String actionAfterCasMultiplier = (String) aContext
+				.getConfigParameterValue(PARAM_ACTION_AFTER_CAS_MULTIPLIER);
+		if ("continue".equalsIgnoreCase(actionAfterCasMultiplier)) {
+			mActionAfterCasMultiplier = ACTION_CONTINUE;
+		} else if ("stop".equalsIgnoreCase(actionAfterCasMultiplier)) {
+			mActionAfterCasMultiplier = ACTION_STOP;
+		} else if ("drop".equalsIgnoreCase(actionAfterCasMultiplier)) {
+			mActionAfterCasMultiplier = ACTION_DROP;
+		} else if ("dropIfNewCasProduced"
+				.equalsIgnoreCase(actionAfterCasMultiplier)) {
+			mActionAfterCasMultiplier = ACTION_DROP_IF_NEW_CAS_PRODUCED;
+		} else if (actionAfterCasMultiplier == null) {
+			mActionAfterCasMultiplier = ACTION_DROP_IF_NEW_CAS_PRODUCED; // default
+		} else {
+			throw new ResourceInitializationException(
+					ResourceInitializationException.INVALID_ACTION_AFTER_CAS_MULTIPLIER,
+					new Object[] { actionAfterCasMultiplier });
+		}
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.apache.uima.flow.FlowController_ImplBase#addAnalysisEngines(java.util.Collection)
-   */
-  public void addAnalysisEngines(Collection<String> aKeys) {
-    // Append new keys to end of Sequence
-    mSequence.addAll(aKeys);
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.apache.uima.flow.CasFlowController_ImplBase#computeFlow(org.apache
+	 * .uima.cas.CAS)
+	 */
+	public Flow computeFlow(CAS aCAS) throws AnalysisEngineProcessException {
+		return new FixedFlowObject(0);
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.apache.uima.flow.FlowController_ImplBase#removeAnalysisEngines(java.util.Collection)
-   */
-  public void removeAnalysisEngines(Collection<String> aKeys) throws AnalysisEngineProcessException {
-    // Remove keys from Sequence
-    mSequence.removeAll(aKeys);
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.apache.uima.flow.FlowController_ImplBase#addAnalysisEngines(java.
+	 * util.Collection)
+	 */
+	public void addAnalysisEngines(Collection<String> aKeys) {
+		// Append new keys to end of Sequence
+		mSequence.addAll(aKeys);
+	}
 
-  public static FlowControllerDescription getDescription() {
-    URL descUrl = FixedFlowController797182.class
-            .getResource("/org/apache/uima/flow/FixedFlowController.xml");
-    FlowControllerDescription desc;
-    try {
-      desc = (FlowControllerDescription) UIMAFramework.getXMLParser().parse(
-              new XMLInputSource(descUrl));
-    } catch (InvalidXMLException e) {
-      throw new UIMARuntimeException(e);
-    } catch (IOException e) {
-      throw new UIMARuntimeException(e);
-    }
-    return desc;
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.apache.uima.flow.FlowController_ImplBase#removeAnalysisEngines(java
+	 * .util.Collection)
+	 */
+	public void removeAnalysisEngines(Collection<String> aKeys)
+			throws AnalysisEngineProcessException {
+		// Remove keys from Sequence
+		mSequence.removeAll(aKeys);
+	}
 
-  class FixedFlowObject extends CasFlow_ImplBase {
-    private int currentStep;
+	public static FlowControllerDescription getDescription() {
+		URL descUrl = FixedFlowController797182.class
+				.getResource("/org/apache/uima/flow/FixedFlowController.xml");
+		FlowControllerDescription desc;
+		try {
+			desc = (FlowControllerDescription) UIMAFramework.getXMLParser()
+					.parse(new XMLInputSource(descUrl));
+		} catch (InvalidXMLException e) {
+			throw new UIMARuntimeException(e);
+		} catch (IOException e) {
+			throw new UIMARuntimeException(e);
+		}
+		return desc;
+	}
 
-    private boolean wasPassedToCasMultiplier = false;
+	class FixedFlowObject extends CasFlow_ImplBase {
+		private int currentStep;
 
-    private boolean casMultiplierProducedNewCas = false;
+		private boolean wasPassedToCasMultiplier = false;
 
-    private boolean internallyCreatedCas = false;
+		private boolean casMultiplierProducedNewCas = false;
 
-    /**
-     * Create a new fixed flow starting at step <code>startStep</code> of the fixed sequence.
-     * 
-     * @param startStep
-     *          index of mSequence to start at
-     */
-    public FixedFlowObject(int startStep) {
-      this(startStep, false);
-    }
+		private boolean internallyCreatedCas = false;
 
-    /**
-     * Create a new fixed flow starting at step <code>startStep</code> of the fixed sequence.
-     * 
-     * @param startStep
-     *          index of mSequence to start at
-     * @param internallyCreatedCas
-     *          true to indicate that this Flow object is for a CAS that was produced by a
-     *          CasMultiplier within this aggregate. Such CASes area allowed to be dropped and not
-     *          output from the aggregate.
-     * 
-     */
-    public FixedFlowObject(int startStep, boolean internallyCreatedCas) {
-      currentStep = startStep;
-      this.internallyCreatedCas = internallyCreatedCas;
-    }
+		/**
+		 * Create a new fixed flow starting at step <code>startStep</code> of
+		 * the fixed sequence.
+		 * 
+		 * @param startStep
+		 *            index of mSequence to start at
+		 */
+		public FixedFlowObject(int startStep) {
+			this(startStep, false);
+		}
 
-    private Trace getTraceString(JCas cas) {
-      AnnotationIndex<Annotation> prevSteps = cas.getAnnotationIndex(ProcessingStep.type);
-      return ProcessingStepUtils.getTrace(prevSteps);
-    }
-    
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.uima.flow.Flow#next()
-     */
-    public Step next() throws AnalysisEngineProcessException {
-      CAS cas = getCas();
-      // if CAS was passed to a CAS multiplier on the last step, special processing
-      // is needed according to the value of the ActionAfterCasMultiplier config parameter
-      if (wasPassedToCasMultiplier) {
-        switch (mActionAfterCasMultiplier) {
-          case ACTION_STOP:
-            return new FinalStep();
-          case ACTION_DROP:
-            return new FinalStep(internallyCreatedCas);
-          case ACTION_DROP_IF_NEW_CAS_PRODUCED:
-            if (casMultiplierProducedNewCas) {
-              return new FinalStep(internallyCreatedCas);
-            }
-            // else, continue with flow
-            break;
-          // if action is ACTION_CONTINUE, just continue with flow
-        }
-        wasPassedToCasMultiplier = false;
-        casMultiplierProducedNewCas = false;
-      }
+		/**
+		 * Create a new fixed flow starting at step <code>startStep</code> of
+		 * the fixed sequence.
+		 * 
+		 * @param startStep
+		 *            index of mSequence to start at
+		 * @param internallyCreatedCas
+		 *            true to indicate that this Flow object is for a CAS that
+		 *            was produced by a CasMultiplier within this aggregate.
+		 *            Such CASes area allowed to be dropped and not output from
+		 *            the aggregate.
+		 * 
+		 */
+		public FixedFlowObject(int startStep, boolean internallyCreatedCas) {
+			currentStep = startStep;
+			this.internallyCreatedCas = internallyCreatedCas;
+		}
 
-      if (currentStep >= mSequence.size()) {
-        return new FinalStep(); // this CAS has finished the sequence
-      }
+		private Trace getTraceString(JCas cas) {
+			AnnotationIndex<Annotation> prevSteps = cas
+					.getAnnotationIndex(ProcessingStep.type);
+			return ProcessingStepUtils.getTrace(prevSteps);
+		}
 
-      // if next step is a CasMultiplier, set wasPassedToCasMultiplier to true for next time
-      // TODO: optimize
-      AnalysisEngineMetaData md = (AnalysisEngineMetaData) getContext()
-              .getAnalysisEngineMetaDataMap().get(mSequence.get(currentStep));
-      if (md.getOperationalProperties().getOutputsNewCASes()) {
-        wasPassedToCasMultiplier = true;
-      }
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.apache.uima.flow.Flow#next()
+		 */
+		public Step next() throws AnalysisEngineProcessException {
+			CAS cas = getCas();
+			// if CAS was passed to a CAS multiplier on the last step, special
+			// processing
+			// is needed according to the value of the ActionAfterCasMultiplier
+			// config parameter
+			if (wasPassedToCasMultiplier) {
+				switch (mActionAfterCasMultiplier) {
+				case ACTION_STOP:
+					return new FinalStep();
+				case ACTION_DROP:
+					return new FinalStep(internallyCreatedCas);
+				case ACTION_DROP_IF_NEW_CAS_PRODUCED:
+					if (casMultiplierProducedNewCas) {
+						return new FinalStep(internallyCreatedCas);
+					}
+					// else, continue with flow
+					break;
+				// if action is ACTION_CONTINUE, just continue with flow
+				}
+				wasPassedToCasMultiplier = false;
+				casMultiplierProducedNewCas = false;
+			}
 
-      if (funnel != null) {
-        try {
-          Trace trace = getTraceString(cas.getJCas());
-          if (funnel.funnel(trace)) {
-            return new FinalStep();
-          }
-        } catch (CASException e) {
-          e.printStackTrace();
-        }
-      }
-      // now send the CAS to the next AE in sequence.
-      return new SimpleStep((String) mSequence.get(currentStep++));
-    }
+			if (currentStep >= mSequence.size()) {
+				return new FinalStep(); // this CAS has finished the sequence
+			}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.uima.flow.CasFlow_ImplBase#newCasProduced(CAS, String)
-     */
-    public Flow newCasProduced(CAS newCas, String producedBy) throws AnalysisEngineProcessException {
-      // record that the input CAS has been segmented (affects its subsequent flow)
-      casMultiplierProducedNewCas = true;
-      // start the new output CAS from the next node after the CasMultiplier that produced it
-      int i = 0;
-      while (!mSequence.get(i).equals(producedBy))
-        i++;
-      return new FixedFlowObject(i + 1, true);
-    }
+			// if next step is a CasMultiplier, set wasPassedToCasMultiplier to
+			// true for next time
+			// TODO: optimize
+			AnalysisEngineMetaData md = (AnalysisEngineMetaData) getContext()
+					.getAnalysisEngineMetaDataMap().get(
+							mSequence.get(currentStep));
+			if (md.getOperationalProperties().getOutputsNewCASes()) {
+				wasPassedToCasMultiplier = true;
+			}
 
-    @Override
-    public boolean continueOnFailure(String failedAeKey, Exception failure) {
-      return true;
-    }
-  }
+			if (funnel != null) {
+				try {
+					Trace trace = getTraceString(cas.getJCas());
+					if (funnel.funnel(trace)) {
+						return new FinalStep();
+					}
+				} catch (CASException e) {
+					e.printStackTrace();
+				}
+			}
+			// now send the CAS to the next AE in sequence.
+			return new SimpleStep((String) mSequence.get(currentStep++));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.apache.uima.flow.CasFlow_ImplBase#newCasProduced(CAS,
+		 * String)
+		 */
+		public Flow newCasProduced(CAS newCas, String producedBy)
+				throws AnalysisEngineProcessException {
+			// record that the input CAS has been segmented (affects its
+			// subsequent flow)
+			casMultiplierProducedNewCas = true;
+			// start the new output CAS from the next node after the
+			// CasMultiplier that produced it
+			int i = 0;
+			while (!mSequence.get(i).equals(producedBy))
+				i++;
+			return new FixedFlowObject(i + 1, true);
+		}
+
+		@Override
+		public boolean continueOnFailure(String failedAeKey, Exception failure) {
+			return true;
+		}
+	}
 }

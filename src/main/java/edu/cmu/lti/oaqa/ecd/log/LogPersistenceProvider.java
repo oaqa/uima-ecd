@@ -22,6 +22,6 @@ import edu.cmu.lti.oaqa.ecd.phase.Trace;
 
 public interface LogPersistenceProvider extends Resource {
 
-  void log(String uuid, Trace trace, LogEntry type, String message);
+	void log(String uuid, Trace trace, LogEntry type, String message);
 
 }

@@ -28,33 +28,34 @@ import edu.cmu.lti.oaqa.ecd.phase.Trace;
 
 public abstract class AbstractLoggedComponent extends TerminableComponent {
 
-  protected String uuid;
+	protected String uuid;
 
-  protected Trace trace;
-  
-  private LogPersistenceProvider persistence;
+	protected Trace trace;
 
-  @Override
-  public void initialize(UimaContext c)
-          throws ResourceInitializationException {
-    super.initialize(c);
-    String pp = (String) c.getConfigParameterValue("persistence-provider");
-    if (pp == null) {
-      throw new ResourceInitializationException(new IllegalArgumentException(
-              "Must provide a parameter of type <persistence-provider>"));
-    }
-    this.persistence = BaseExperimentBuilder.loadProvider(pp,
-            LogPersistenceProvider.class);
-  }
-  
-  @Override
-  public void process(JCas jcas) throws AnalysisEngineProcessException {
-    super.process(jcas);
-    this.uuid = ProcessingStepUtils.getCurrentExperimentId(jcas);
-    this.trace = ProcessingStepUtils.getTrace(jcas);
-  }
+	private LogPersistenceProvider persistence;
 
-  protected void log(LogEntry type, String message) {
-    persistence.log(uuid, trace, type, message);
-  }
+	@Override
+	public void initialize(UimaContext c)
+			throws ResourceInitializationException {
+		super.initialize(c);
+		String pp = (String) c.getConfigParameterValue("persistence-provider");
+		if (pp == null) {
+			throw new ResourceInitializationException(
+					new IllegalArgumentException(
+							"Must provide a parameter of type <persistence-provider>"));
+		}
+		this.persistence = BaseExperimentBuilder.loadProvider(pp,
+				LogPersistenceProvider.class);
+	}
+
+	@Override
+	public void process(JCas jcas) throws AnalysisEngineProcessException {
+		super.process(jcas);
+		this.uuid = ProcessingStepUtils.getCurrentExperimentId(jcas);
+		this.trace = ProcessingStepUtils.getTrace(jcas);
+	}
+
+	protected void log(LogEntry type, String message) {
+		persistence.log(uuid, trace, type, message);
+	}
 }

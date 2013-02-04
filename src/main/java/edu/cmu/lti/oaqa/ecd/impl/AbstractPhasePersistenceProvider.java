@@ -19,6 +19,7 @@ package edu.cmu.lti.oaqa.ecd.impl;
 import edu.cmu.lti.oaqa.ecd.config.ConfigurableProvider;
 import edu.cmu.lti.oaqa.ecd.phase.PhasePersistenceProvider;
 
-public abstract class AbstractPhasePersistenceProvider extends ConfigurableProvider implements PhasePersistenceProvider {
+public abstract class AbstractPhasePersistenceProvider extends
+		ConfigurableProvider implements PhasePersistenceProvider {
 
 }

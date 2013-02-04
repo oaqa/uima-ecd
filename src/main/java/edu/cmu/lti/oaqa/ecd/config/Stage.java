@@ -20,21 +20,33 @@ import mx.bigdata.anyobject.AnyObject;
 
 public final class Stage {
 
-  private final int id;
-  
-  private final AnyObject config;
-  
-  Stage(int id, AnyObject config) {
-    this.id = id;
-    this.config = config;
-  }
-  
-  public AnyObject getConfiguration() {
-    return config;
-  }
-  
-  public int getId() {
-    return id;
-  }
-  
+	private final int id;
+	private final AnyObject config;
+
+	/**
+	 * Constructor, sets unique ID and YAML config object.
+	 * @param id
+	 * @param config
+	 */
+	Stage(int id, AnyObject config) {
+		this.id = id;
+		this.config = config;
+	}
+
+	/**
+	 * Get YAML config object.
+	 * @return 
+	 */
+	public AnyObject getConfiguration() {
+		return config;
+	}
+
+	/**
+	 * Get the stage's unique ID.
+	 * @return int unique ID
+	 */
+	public int getId() {
+		return id;
+	}
+
 }

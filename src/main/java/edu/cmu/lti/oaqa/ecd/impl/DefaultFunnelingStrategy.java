@@ -23,15 +23,29 @@ import com.google.common.collect.Lists;
 import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
 import edu.cmu.lti.oaqa.ecd.funnel.SetBasedFunnel;
 
+/**
+ * Funneling strategy consisting of empty Strings and an empty Set.
+ */
 public final class DefaultFunnelingStrategy extends AbstractFunnelingStrategy {
-  
-  @Override
-  public FunneledFlow newFunnelStrategy(String experimentUuid) {
-    List<String> matchingTraces = getMatchingTraces(experimentUuid);
-    return new SetBasedFunnel(matchingTraces);
-  }
-  
-  private List<String> getMatchingTraces(String experiment) {
-    return Lists.<String>newArrayList();
-  }
+
+	@Override
+	/**
+	 * 
+	 * @param experimentUuid Unique experiment ID
+	 */
+	public FunneledFlow newFunnelStrategy(String experimentUuid) {
+		// TODO This creates a new empty ArrayList (?)
+		List<String> matchingTraces = getMatchingTraces(experimentUuid);
+		// TODO This is just an empty set!?
+		return new SetBasedFunnel(matchingTraces);
+	}
+
+	/**
+	 * Return and empty ArrayList of String's.
+	 * @param experimentUuid unique experiment ID
+	 * @return empty ArrayList of String's.
+	 */
+	private List<String> getMatchingTraces(String experimentUuid) {
+		return Lists.<String> newArrayList();
+	}
 }

@@ -30,65 +30,67 @@ import com.google.common.collect.Maps;
 
 public class StagedConfigurationImpl implements StagedConfiguration {
 
-  private enum Scope {
-    STAGE, GLOBAL
-  };
+	private enum Scope {
+		STAGE, GLOBAL
+	};
+	private static final String STAGES_NODE_NAME = "stages";
+	private static final String SCOPE_NODE_NAME = "scope";
+	private final AnyObject original;
 
-  private static final String STAGES_NODE_NAME = "stages";
+	/**
+	 * Constructor.
+	 * @param config YAML object
+	 */
+	public StagedConfigurationImpl(AnyObject config) {
+		this.original = config;
+	}
 
-  private static final String SCOPE_NODE_NAME = "scope";
+	@Override
+	public Iterator<Stage> iterator() {
+		Iterable<AnyObject> stages = original.getIterable(STAGES_NODE_NAME);
+		if (stages == null) {
+			return Iterators.singletonIterator(new Stage(1, original));
+		} else {
+			return buildStagedConfigs(stages);
+		}
+	}
 
-  private final AnyObject original;
+	Iterator<Stage> buildStagedConfigs(Iterable<AnyObject> stages) {
+		List<Stage> confs = Lists.newArrayList();
+		List<Object> pipeline = Lists.newArrayList();
+		int count = 1;
+		for (AnyObject stage : stages) {
+			Map<String, Object> conf = Maps.newLinkedHashMap();
+			for (AnyTuple tuple : original.getTuples()) {
+				if (!tuple.getKey().equals(STAGES_NODE_NAME)) {
+					conf.put(tuple.getKey(), tuple.getObject());
+				}
+			}
+			List<Object> inner = Lists.newArrayList(pipeline);
+			for (Object o : stage.getIterable("pipeline")) {
+				inner.add(o);
+				AnyObject component = (AnyObject) o;
+				String scope = component.getString(SCOPE_NODE_NAME);
+				addComponentIfInGlobalScope(o, pipeline, scope);
+			}
+			conf.put("pipeline", inner);
+			conf.put("post-process", stage.getIterable("post-process"));
+			confs.add(new Stage(count, new MapBasedAnyObject(conf)));
+			count++;
+		}
+		return confs.iterator();
+	}
 
-  public StagedConfigurationImpl(AnyObject config) {
-    this.original = config;
-  }
-
-  @Override
-  public Iterator<Stage> iterator() {
-    Iterable<AnyObject> stages = original.getIterable(STAGES_NODE_NAME);
-    if (stages == null) {
-      return Iterators.singletonIterator(new Stage(1, original));
-    } else {
-      return buildStagedConfigs(stages);
-    }
-  }
-
-  Iterator<Stage> buildStagedConfigs(Iterable<AnyObject> stages) {
-    List<Stage> confs = Lists.newArrayList();
-    List<Object> pipeline = Lists.newArrayList();
-    int count = 1;
-    for (AnyObject stage : stages) {
-      Map<String, Object> conf = Maps.newLinkedHashMap();
-      for (AnyTuple tuple : original.getTuples()) {
-        if (!tuple.getKey().equals(STAGES_NODE_NAME)) {
-          conf.put(tuple.getKey(), tuple.getObject());
-        }
-      }
-      List<Object> inner = Lists.newArrayList(pipeline);
-      for (Object o : stage.getIterable("pipeline")) {
-        inner.add(o);
-        AnyObject component = (AnyObject) o;
-        String scope = component.getString(SCOPE_NODE_NAME);
-        addComponentIfInGlobalScope(o, pipeline, scope);
-      }
-      conf.put("pipeline", inner);
-      conf.put("post-process", stage.getIterable("post-process"));
-      confs.add(new Stage(count, new MapBasedAnyObject(conf)));
-      count++;
-    }
-    return confs.iterator();
-  }
-
-  private void addComponentIfInGlobalScope(Object o, List<Object> pipeline, String scopeName) {
-    if (scopeName == null) {
-      pipeline.add(o);
-    } else {
-      Scope scope = Scope.valueOf(scopeName);
-      if (scope != Scope.STAGE) {
-        pipeline.add(o);
-      }
-    }
-  }
+	private void addComponentIfInGlobalScope(Object o, List<Object> pipeline,
+			String scopeName) {
+		if (scopeName == null) {
+			pipeline.add(o);
+		} else {
+			Scope scope = Scope.valueOf(scopeName);
+			if (scope != Scope.STAGE) {
+				pipeline.add(o);
+			}
+		}
+	}
 
 }

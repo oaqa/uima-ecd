@@ -69,514 +69,596 @@ import edu.cmu.lti.oaqa.ecd.phase.BasePhase;
 
 public final class BaseExperimentBuilder implements ExperimentBuilder {
 
-  private static final Set<String> FILTER = ImmutableSet.of("class", "inherit", "pipeline");
+	private static final Set<String> FILTER = ImmutableSet.of("class",
+			"inherit", "pipeline");
+	private static final ResourceHandle NOOP_RESOURCE = ResourceHandle
+			.newInheritHandle("base.noop");
+	public static final String EXPERIMENT_UUID_PROPERTY = "cse.driver.experiment.uuid";
+	public static final String STAGE_ID_PROPERTY = "cse.driver.experiment.stageIdd";
+	private final TypeSystemDescription typeSystem;
+	private final String experimentUuid;
+	private final AnyObject configuration;
+	private final ExperimentPersistenceProvider persistence;
+	private TypePriorities typePriorities = (TypePriorities) null;
 
-  private static final ResourceHandle NOOP_RESOURCE = ResourceHandle.newInheritHandle("base.noop");
+	/**
+	 * Constructor.
+	 * @param experimentUuid unique experiment ID
+	 * @param resource path to YAML descriptor
+	 * @param typeSystem empty type system
+	 * @throws Exception
+	 */
+	public BaseExperimentBuilder(String experimentUuid, String resource,
+			TypeSystemDescription typeSystem) throws Exception {
+		this.typeSystem = typeSystem;
+		this.experimentUuid = experimentUuid;
+		// Loads a YAML file object from SnakeYaml
+		this.configuration = ConfigurationLoader.load(resource);
+		// Instantiate experiment persistence provider from YAML object
+		this.persistence = newPersistenceProvider(configuration);
+		// Define experiment parameters in the persistence layer
+		insertExperiment(configuration, resource);
+	}
 
-  public static final String EXPERIMENT_UUID_PROPERTY = "cse.driver.experiment.uuid";
+	/**
+	 * Creates a persistence provider from a YAML object
+	 * @param config YAML file object
+	 * @return ExperimentPersistenceProvider based on YAML=specified
+	 * 			 persistence provider 
+	 * @throws ResourceInitializationException
+	 */
+	private ExperimentPersistenceProvider newPersistenceProvider(
+			AnyObject config) throws ResourceInitializationException {
+		// Read persistence provider attribute
+		AnyObject pprovider = config.getAnyObject("persistence-provider");
+		// if it's not present, then create an empty one
+		if (pprovider == null) {
+			return new DefaultExperimentPersistenceProvider();
+		}
+		// Attempt to create a persistence provider resource
+		try {
+			return initializeResource(config, "persistence-provider",
+					ExperimentPersistenceProvider.class);
+		} catch (Exception e) {
+			throw new ResourceInitializationException(
+					ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR,
+					new Object[] { "persistence-provider", config }, e);
+		}
+	}
 
-  public static final String STAGE_ID_PROPERTY = "cse.driver.experiment.stageIdd";
+	@Override
+	public String getExperimentUuid() {
+		return experimentUuid;
+	}
 
-  private final TypeSystemDescription typeSystem;
+	@Override
+	public AnyObject getConfiguration() {
+		return configuration;
+	}
 
-  private final String experimentUuid;
+	@Override
+	public AnalysisEngine createNoOpEngine() throws Exception {
+		Map<String, Object> tuples = Maps.newLinkedHashMap();
+		Class<? extends AnalysisComponent> ac = loadFromClassOrInherit(
+				NOOP_RESOURCE, AnalysisComponent.class, tuples);
+		AnalysisEngineDescription aeDesc = createAnalysisEngineDescription(
+				tuples, ac);
+		System.out.println("\t- "
+				+ aeDesc.getAnalysisEngineMetaData().getName());
+		return produceAnalysisEngine(null, aeDesc);
+	}
 
-  private final AnyObject configuration;
+	@Override
+	public AnalysisEngine buildPipeline(AnyObject config, String pipeline,
+			int stageId) throws Exception {
+		try {
+			return buildPipeline(config, pipeline, stageId, null, false);
+		} catch (Exception e) {
+			throw new ResourceInitializationException(
+					ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR,
+					new Object[] { pipeline, config }, e);
+		}
+	}
 
-  private final ExperimentPersistenceProvider persistence;
+	@Override
+	public AnalysisEngine buildPipeline(AnyObject config, String pipeline,
+			int stageId, FixedFlow funnel) throws Exception {
+		try {
+			return buildPipeline(config, pipeline, stageId, funnel, false);
+		} catch (Exception e) {
+			Throwables.propagateIfInstanceOf(e,
+					ResourceInitializationException.class);
+			throw new ResourceInitializationException(
+					ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR,
+					new Object[] { pipeline, config }, e);
+		}
+	}
 
-  private TypePriorities typePriorities = (TypePriorities) null;
+	@Override
+	public AnalysisEngine buildPipeline(AnyObject config, String pipeline,
+			int stageId, FixedFlow funnel, boolean outputNewCASes)
+			throws Exception {
+		loadTypePriorities(config);
+		Iterable<AnyObject> iterable = config.getIterable(pipeline);
+		FlowControllerDescription fcd = FlowControllerFactory
+				.createFlowControllerDescription(FixedFlowController797182.class);
+		AnalysisEngineDescription aee = buildPipeline(stageId, iterable, fcd);
+		if (funnel != null) {
+			FixedFlow fc = (FixedFlow) aee.getAnalysisEngineMetaData()
+					.getFlowConstraints();
+			funnel.setFixedFlow(fc.getFixedFlow());
+			aee.getAnalysisEngineMetaData().setFlowConstraints(funnel);
+		}
+		aee.getAnalysisEngineMetaData().getOperationalProperties()
+				.setOutputsNewCASes(outputNewCASes);
+		aee.getAnalysisEngineMetaData().setName(pipeline);
+		return AnalysisEngineFactory.createAggregate(aee);
+	}
 
-  public BaseExperimentBuilder(String experimentUuid, String resource,
-          TypeSystemDescription typeSystem) throws Exception {
-    this.typeSystem = typeSystem;
-    this.experimentUuid = experimentUuid;
-    this.configuration = ConfigurationLoader.load(resource);
-    this.persistence = newPersistenceProvider(configuration);
-    insertExperiment(configuration, resource);
-  }
+	private AnalysisEngineDescription buildPipeline(int stageId,
+			Iterable<AnyObject> pipeline, FlowControllerDescription fcd)
+			throws Exception {
+		AggregateBuilder builder = new AggregateBuilder(null, null, fcd);
+		int phase = 1;
+		for (AnyObject aeDescription : pipeline) {
+			AnalysisEngineDescription description = buildComponent(stageId,
+					phase, aeDescription);
+			builder.add(description);
+			phase++;
+		}
+		return builder.createAggregateDescription();
+	}
 
-  private ExperimentPersistenceProvider newPersistenceProvider(AnyObject config)
-          throws ResourceInitializationException {
-    AnyObject pprovider = config.getAnyObject("persistence-provider");
-    if (pprovider == null) {
-      return new DefaultExperimentPersistenceProvider();
-    }
-    try {
-      return initializeResource(config, "persistence-provider", ExperimentPersistenceProvider.class);
-    } catch (Exception e) {
-      throw new ResourceInitializationException(
-              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
-                  "persistence-provider", config }, e);
-    }
-  }
+	private String[] getFromListOrInherit(AnyObject descriptor, String listName)
+			throws IOException {
+		Iterable<String> iterable = descriptor.getIterable(listName);
+		if (iterable != null) {
+			ArrayList<String> typePrioritiesList = new ArrayList<String>();
+			for (String type : iterable) {
+				typePrioritiesList.add(type);
+				System.out.println("Loaded type priorities: " + type);
+			}
+			return typePrioritiesList.toArray(new String[0]);
+		} else {
+			String resource = descriptor.getString("inherit");
+			if (resource != null) {
+				AnyObject yaml = ConfigurationLoader.load(resource);
+				return getFromListOrInherit(yaml, listName);
+			} else {
+				throw new IllegalArgumentException(
+						"Illegal experiment descriptor, must contain one list of type <"
+								+ listName + "> or <inherit>");
+			}
+		}
+	}
 
-  @Override
-  public String getExperimentUuid() {
-    return experimentUuid;
-  }
+	// Load type priorities
+	private void loadTypePriorities(AnyObject config) {
+		AnyObject tpObject = config.getAnyObject("type-priorities");
+		if (tpObject == null) {
+			return;
+		}
+		try {
+			String[] typePrioritiesArray = getFromListOrInherit(tpObject,
+					"type-list");
+			this.typePriorities = TypePrioritiesFactory
+					.createTypePriorities(typePrioritiesArray);
+		} catch (IOException e) {
+			System.err.println("Failed to load type-priorities.");
+			e.printStackTrace();
+		}
+	}
 
-  @Override
-  public AnyObject getConfiguration() {
-    return configuration;
-  }
+	// Made this method public to invoke it from BasePhaseTest
+	public AnalysisEngineDescription buildComponent(int stageId, int phase,
+			AnyObject aeDescription) throws Exception {
+		Map<String, Object> tuples = Maps.newLinkedHashMap();
+		tuples.put(BasePhase.QA_INTERNAL_PHASEID, new Integer(phase));
+		tuples.put(EXPERIMENT_UUID_PROPERTY, experimentUuid);
+		tuples.put(STAGE_ID_PROPERTY, stageId);
+		Class<? extends AnalysisComponent> ac = getFromClassOrInherit(
+				aeDescription, AnalysisComponent.class, tuples);
+		Object[] params = getParamList(tuples);
+		AnalysisEngineDescription description = AnalysisEngineFactory
+				.createPrimitiveDescription(ac, typeSystem, typePriorities,
+						params);
+		String name = (String) tuples.get("name");
+		description.getAnalysisEngineMetaData().setName(name);
+		return description;
+	}
 
-  @Override
-  public AnalysisEngine createNoOpEngine() throws Exception {
-    Map<String, Object> tuples = Maps.newLinkedHashMap();
-    Class<? extends AnalysisComponent> ac = loadFromClassOrInherit(NOOP_RESOURCE,
-            AnalysisComponent.class, tuples);
-    AnalysisEngineDescription aeDesc = createAnalysisEngineDescription(tuples, ac);
-    System.out.println("\t- " + aeDesc.getAnalysisEngineMetaData().getName());
-    return produceAnalysisEngine(null, aeDesc);
-  }
+	@Override
+	public CollectionReader buildCollectionReader(AnyObject config, int stageId)
+			throws Exception {
+		AnyObject descriptor = config.getAnyObject("collection-reader");
+		Map<String, Object> tuples = Maps.newLinkedHashMap();
+		tuples.put(EXPERIMENT_UUID_PROPERTY, experimentUuid);
+		tuples.put(STAGE_ID_PROPERTY, stageId);
+		Class<? extends CollectionReader> readerClass = getFromClassOrInherit(
+				descriptor, CollectionReader.class, tuples);
+		Object[] params = getParamList(tuples);
+		CollectionReader reader = CollectionReaderFactory
+				.createCollectionReader(readerClass, typeSystem, params);
+		return reader;
+	}
 
-  @Override
-  public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId)
-          throws Exception {
-    try {
-      return buildPipeline(config, pipeline, stageId, null, false);
-    } catch (Exception e) {
-      throw new ResourceInitializationException(
-              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
-                  pipeline, config }, e);
-    }
-  }
+	@Override
+	/**
+	 * Creates a UIMA resource from a YAML file object and a node therein.
+	 * Casts the resource to type 'type'.
+	 */
+	public <T extends Resource> T initializeResource(AnyObject config,
+			String node, Class<T> type) throws Exception {
+		// Get the value corresponding to the key 'node'
+		AnyObject descriptor = config.getAnyObject(node);
+		// if not found, return null
+		if (descriptor == null) {
+			return null;
+		}
+		Map<String, Object> tuples = Maps.newLinkedHashMap();
+		// 
+		// Get the Java Class specified by 'descriptor' from the Map 'tuples' 
+		Class<? extends Resource> cseClass = getFromClassOrInherit(descriptor,
+				Resource.class, tuples);
+		// Attempt to create a UIMA Resource of the type specified by 'type'
+		return buildResource(cseClass, tuples, type);
+	}
 
-  @Override
-  public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId,
-          FixedFlow funnel) throws Exception {
-    try {
-      return buildPipeline(config, pipeline, stageId, funnel, false);
-    } catch (Exception e) {
-      Throwables.propagateIfInstanceOf(e, ResourceInitializationException.class);
-      throw new ResourceInitializationException(
-              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
-                  pipeline, config }, e);
-    }
-  }
+	/**
+	 * 
+	 * @param config YAML object
+	 * @param resource path to YAML file
+	 * @throws Exception
+	 */
+	private void insertExperiment(AnyObject config, String resource)
+			throws Exception {
+		// Retrieve configuration parameters (e.g. name, author, etc.)
+		AnyObject experiment = config.getAnyObject("configuration");
+		String name = experiment.getString("name");
+		String author = experiment.getString("author");
+		// Define a new experiment in the given persistence layer/back-end
+		persistence.insertExperiment(getExperimentUuid(), name, author,
+				ConfigurationLoader.getString(resource), resource);
+	}
 
-  @Override
-  public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId,
-          FixedFlow funnel, boolean outputNewCASes) throws Exception {
-    loadTypePriorities(config);
-    Iterable<AnyObject> iterable = config.getIterable(pipeline);
-    FlowControllerDescription fcd = FlowControllerFactory
-            .createFlowControllerDescription(FixedFlowController797182.class);
-    AnalysisEngineDescription aee = buildPipeline(stageId, iterable, fcd);
-    if (funnel != null) {
-      FixedFlow fc = (FixedFlow) aee.getAnalysisEngineMetaData().getFlowConstraints();
-      funnel.setFixedFlow(fc.getFixedFlow());
-      aee.getAnalysisEngineMetaData().setFlowConstraints(funnel);
-    }
-    aee.getAnalysisEngineMetaData().getOperationalProperties().setOutputsNewCASes(outputNewCASes);
-    aee.getAnalysisEngineMetaData().setName(pipeline);
-    return AnalysisEngineFactory.createAggregate(aee);
-  }
+	public static <T extends Resource> T loadProvider(String provider,
+			Class<T> type) throws ResourceInitializationException {
+		Yaml yaml = new Yaml();
+		@SuppressWarnings("unchecked")
+		Map<String, String> map = (Map<String, String>) yaml.load(provider);
+		ResourceHandle handle = buildHandleFromMap(map);
+		try {
+			return buildResource(handle, type);
+		} catch (Exception e) {
+			throw new ResourceInitializationException(
+					ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR,
+					new Object[] { type.getCanonicalName(), provider }, e);
+		}
+	}
 
-  private AnalysisEngineDescription buildPipeline(int stageId, Iterable<AnyObject> pipeline,
-          FlowControllerDescription fcd) throws Exception {
-    AggregateBuilder builder = new AggregateBuilder(null, null, fcd);
-    int phase = 1;
-    for (AnyObject aeDescription : pipeline) {
-      AnalysisEngineDescription description = buildComponent(stageId, phase, aeDescription);
-      builder.add(description);
-      phase++;
-    }
-    return builder.createAggregateDescription();
-  }
+	public static <T extends Resource> T loadProvider(AnyObject ao,
+			Class<T> type) throws ResourceInitializationException {
+		ResourceHandle handle = buildHandleFromObject(ao);
+		try {
+			return buildResource(handle, type);
+		} catch (Exception e) {
+			throw new ResourceInitializationException(
+					ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR,
+					new Object[] { type.getCanonicalName(), ao }, e);
+		}
+	}
 
-  private String[] getFromListOrInherit(AnyObject descriptor, String listName) throws IOException {
-    Iterable<String> iterable = descriptor.getIterable(listName);
-    if (iterable != null) {
-      ArrayList<String> typePrioritiesList = new ArrayList<String>();
-      for (String type : iterable) {
-        typePrioritiesList.add(type);
-        System.out.println("Loaded type priorities: " + type);
-      }
-      return typePrioritiesList.toArray(new String[0]);
-    } else {
-      String resource = descriptor.getString("inherit");
-      if (resource != null) {
-        AnyObject yaml = ConfigurationLoader.load(resource);
-        return getFromListOrInherit(yaml, listName);
-      } else {
-        throw new IllegalArgumentException(
-                "Illegal experiment descriptor, must contain one list of type <" + listName
-                        + "> or <inherit>");
-      }
-    }
-  }
+	public static AnalysisEngine[] createAnnotators(String description) {
+		Yaml yaml = new Yaml();
+		@SuppressWarnings("unchecked")
+		List<Map<String, String>> names = (List<Map<String, String>>) yaml
+				.load(description);
+		List<AnalysisEngine> annotators = Lists.newArrayList();
+		for (Map<String, String> name : names) {
+			try {
+				Map<String, Object> tuples = Maps.newHashMap();
+				ResourceHandle handle = buildHandleFromMap(name);
+				Class<? extends JCasAnnotator_ImplBase> aClass = loadFromClassOrInherit(
+						handle, JCasAnnotator_ImplBase.class, tuples);
+				Object[] params = getParamList(tuples);
+				AnalysisEngineDescription aeDesc = AnalysisEngineFactory
+						.createPrimitiveDescription(aClass, params);
+				annotators.add(UIMAFramework.produceAnalysisEngine(aeDesc));
+			} catch (Exception e) {
+				System.err.printf("[ERROR] %s Caused by:\n", e);
+				Throwables.getRootCause(e).printStackTrace();
+			}
+		}
+		return annotators.toArray(new AnalysisEngine[0]);
+	}
 
-  // Load type priorities
-  private void loadTypePriorities(AnyObject config) {
-    AnyObject tpObject = config.getAnyObject("type-priorities");
-    if (tpObject == null) {
-      return;
-    }
-    try {
-      String[] typePrioritiesArray = getFromListOrInherit(tpObject, "type-list");
-      this.typePriorities = TypePrioritiesFactory.createTypePriorities(typePrioritiesArray);
-    } catch (IOException e) {
-      System.err.println("Failed to load type-priorities.");
-      e.printStackTrace();
-    }
-  }
+	public static <T extends Resource> List<T> createResourceList(
+			List<Map<String, String>> names, Class<T> type) {
+		List<T> resources = Lists.newArrayList();
+		for (Map<String, String> name : names) {
+			try {
+				ResourceHandle handle = buildHandleFromMap(name);
+				resources.add(buildResource(handle, type));
+			} catch (Exception e) {
+				System.err.printf("[ERROR] %s Caused by:\n", e);
+				Throwables.getRootCause(e).printStackTrace();
+			}
+		}
+		return resources;
+	}
 
-  // Made this method public to invoke it from BasePhaseTest
-  public AnalysisEngineDescription buildComponent(int stageId, int phase, AnyObject aeDescription)
-          throws Exception {
-    Map<String, Object> tuples = Maps.newLinkedHashMap();
-    tuples.put(BasePhase.QA_INTERNAL_PHASEID, new Integer(phase));
-    tuples.put(EXPERIMENT_UUID_PROPERTY, experimentUuid);
-    tuples.put(STAGE_ID_PROPERTY, stageId);
-    Class<? extends AnalysisComponent> ac = getFromClassOrInherit(aeDescription,
-            AnalysisComponent.class, tuples);
-    Object[] params = getParamList(tuples);
-    AnalysisEngineDescription description = AnalysisEngineFactory.createPrimitiveDescription(ac,
-            typeSystem, typePriorities, params);
-    String name = (String) tuples.get("name");
-    description.getAnalysisEngineMetaData().setName(name);
-    return description;
-  }
+	public static <T extends Resource> T buildResource(ResourceHandle handle,
+			Class<T> type) throws ResourceInitializationException {
+		Map<String, Object> tuples = Maps.newLinkedHashMap();
+		try {
+			Class<? extends Resource> resourceClass = loadFromClassOrInherit(
+					handle, Resource.class, tuples);
+			return buildResource(resourceClass, tuples, type);
+		} catch (Exception e) {
+			throw new ResourceInitializationException(
+					ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR,
+					new Object[] { type.getCanonicalName(), handle }, e);
+		}
+	}
 
-  @Override
-  public CollectionReader buildCollectionReader(AnyObject config, int stageId) throws Exception {
-    AnyObject descriptor = config.getAnyObject("collection-reader");
-    Map<String, Object> tuples = Maps.newLinkedHashMap();
-    tuples.put(EXPERIMENT_UUID_PROPERTY, experimentUuid);
-    tuples.put(STAGE_ID_PROPERTY, stageId);
-    Class<? extends CollectionReader> readerClass = getFromClassOrInherit(descriptor,
-            CollectionReader.class, tuples);
-    Object[] params = getParamList(tuples);
-    CollectionReader reader = CollectionReaderFactory.createCollectionReader(readerClass,
-            typeSystem, params);
-    return reader;
-  }
+	/**
+	 * Build a UIMA resource class from a specified class, a Map created from YAML
+	 * attributes, and cast to a specified type.
+	 * @param <T>
+	 * @param resourceClass Java Class of the resource to create
+	 * @param tuples Map containing parameters for the resource
+	 * @param type output class type
+	 * @return UIMA resource of type 'type'
+	 * @throws Exception
+	 */
+	private static <T extends Resource> T buildResource(
+			Class<? extends Resource> resourceClass,
+			Map<String, Object> tuples, Class<T> type) throws Exception {
+		CustomResourceSpecifier spec = new CustomResourceSpecifier_impl();
+		spec.setResourceClassName(resourceClass.getName());
+		Resource resource = UIMAFramework.produceResource(spec, tuples);
+		return type.cast(resource);
+	}
 
-  @Override
-  public <T extends Resource> T initializeResource(AnyObject config, String node, Class<T> type)
-          throws Exception {
-    AnyObject descriptor = config.getAnyObject(node);
-    if (descriptor == null) {
-      return null;
-    }
-    Map<String, Object> tuples = Maps.newLinkedHashMap();
-    Class<? extends Resource> cseClass = getFromClassOrInherit(descriptor, Resource.class, tuples);
-    return buildResource(cseClass, tuples, type);
-  }
+	public static Object[] getParamList(Map<String, Object> tuples) {
+		List<Object> params = Lists.newArrayList();
+		for (Map.Entry<String, Object> me : tuples.entrySet()) {
+			params.add(me.getKey());
+			params.add(cast(me.getValue()));
+		}
+		return params.toArray();
+	}
 
-  private void insertExperiment(AnyObject config, String resource) throws Exception {
-    AnyObject experiment = config.getAnyObject("configuration");
-    String name = experiment.getString("name");
-    String author = experiment.getString("author");
-    persistence.insertExperiment(getExperimentUuid(), name, author,
-            ConfigurationLoader.getString(resource), resource);
-  }
+	private static Object cast(Object o) {
+		if (o instanceof Iterable) {
+			List<?> list = Lists.newArrayList((Iterable<?>) o);
+			Object k = list.get(0);
+			if (k instanceof String) {
+				return list.toArray(new String[0]);
+			} else if (k instanceof Integer) {
+				return list.toArray(new Integer[0]);
+			} else if (k instanceof Float) {
+				return list.toArray(new Float[0]);
+			} else if (k instanceof Double) {
+				List<Float> bogus = Lists.newArrayList();
+				for (Object j : list) {
+					bogus.add(((Double) j).floatValue());
+				}
+				return bogus.toArray(new Float[0]);
+			} else if (list.get(0) instanceof Boolean) {
+				return list.toArray(new Boolean[0]);
+			}
+		} else if (o instanceof Double) {
+			return ((Double) o).floatValue();
+		}
+		return o;
+	}
 
-  public static <T extends Resource> T loadProvider(String provider, Class<T> type)
-          throws ResourceInitializationException {
-    Yaml yaml = new Yaml();
-    @SuppressWarnings("unchecked")
-    Map<String, String> map = (Map<String, String>) yaml.load(provider);
-    ResourceHandle handle = buildHandleFromMap(map);
-    try {
-      return buildResource(handle, type);
-    } catch (Exception e) {
-      throw new ResourceInitializationException(
-              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
-                  type.getCanonicalName(), provider }, e);
-    }
-  }
+	/**
+	 * Recursively read YAML files and build flat 
+	 * @param <C>
+	 * @param descriptor
+	 * @param ifaceClass
+	 * @param tuples
+	 * @return
+	 * @throws Exception
+	 */
+	public static <C> Class<? extends C> getFromClassOrInherit(
+			AnyObject descriptor, Class<C> ifaceClass,
+			Map<String, Object> tuples) throws Exception {
+		for (AnyTuple tuple : descriptor.getTuples()) {
+			if (!FILTER.contains(tuple.getKey())) {
+				if (!tuples.containsKey(tuple.getKey())) {
+					tuples.put(tuple.getKey(), tuple.getObject());
+				}
+			}
+		}
+		String name = descriptor.getString("class");
+		if (name != null) {
+			return Class.forName(name).asSubclass(ifaceClass);
+		} else {
+			String resource = descriptor.getString("inherit");
+			if (resource != null) {
+				AnyObject yaml = ConfigurationLoader.load(resource);
+				return getFromClassOrInherit(yaml, ifaceClass, tuples);
+			} else {
+				throw new IllegalArgumentException(
+						"Illegal experiment descriptor, must contain one node of type <class> or <inherit>");
+			}
+		}
+	}
 
-  public static <T extends Resource> T loadProvider(AnyObject ao, Class<T> type)
-          throws ResourceInitializationException {
-    ResourceHandle handle = buildHandleFromObject(ao);
-    try {
-      return buildResource(handle, type);
-    } catch (Exception e) {
-      throw new ResourceInitializationException(
-              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
-                  type.getCanonicalName(), ao }, e);
-    }
-  }
+	public static <C> Class<? extends C> loadFromClassOrInherit(
+			ResourceHandle resource, Class<C> ifaceClass,
+			Map<String, Object> tuples) throws Exception {
+		if (resource.getType() == HandleType.CLASS) {
+			return Class.forName(resource.resource).asSubclass(ifaceClass);
+		} else {
+			if (resource.getType() == HandleType.INHERIT) {
+				AnyObject yaml = ConfigurationLoader.load(resource.resource);
+				return getFromClassOrInherit(yaml, ifaceClass, tuples);
+			} else {
+				throw new IllegalArgumentException(
+						"Illegal experiment descriptor, must contain one node of type <class> or <inherit>");
+			}
+		}
+	}
 
-  public static AnalysisEngine[] createAnnotators(String description) {
-    Yaml yaml = new Yaml();
-    @SuppressWarnings("unchecked")
-    List<Map<String, String>> names = (List<Map<String, String>>) yaml.load(description);
-    List<AnalysisEngine> annotators = Lists.newArrayList();
-    for (Map<String, String> name : names) {
-      try {
-        Map<String, Object> tuples = Maps.newHashMap();
-        ResourceHandle handle = buildHandleFromMap(name);
-        Class<? extends JCasAnnotator_ImplBase> aClass = loadFromClassOrInherit(handle,
-                JCasAnnotator_ImplBase.class, tuples);
-        Object[] params = getParamList(tuples);
-        AnalysisEngineDescription aeDesc = AnalysisEngineFactory.createPrimitiveDescription(aClass,
-                params);
-        annotators.add(UIMAFramework.produceAnalysisEngine(aeDesc));
-      } catch (Exception e) {
-        System.err.printf("[ERROR] %s Caused by:\n", e);
-        Throwables.getRootCause(e).printStackTrace();
-      }
-    }
-    return annotators.toArray(new AnalysisEngine[0]);
-  }
+	public static AnalysisEngineDescription createAnalysisEngineDescription(
+			Map<String, Object> tuples, Class<? extends AnalysisComponent> comp)
+			throws ResourceInitializationException {
+		Object[] params = getParamList(tuples);
+		AnalysisEngineDescription aeDesc = AnalysisEngineFactory
+				.createPrimitiveDescription(comp, params);
+		StringBuilder sb = new StringBuilder(comp.getSimpleName());
+		if (params.length > 0) {
+			appendMethodSignature(sb, tuples);
+		}
+		String name = sb.toString().replaceAll("\n", " ").trim();
+		aeDesc.getAnalysisEngineMetaData().setName(name);
+		return aeDesc;
 
-  public static <T extends Resource> List<T> createResourceList(List<Map<String, String>> names,
-          Class<T> type) {
-    List<T> resources = Lists.newArrayList();
-    for (Map<String, String> name : names) {
-      try {
-        ResourceHandle handle = buildHandleFromMap(name);
-        resources.add(buildResource(handle, type));
-      } catch (Exception e) {
-        System.err.printf("[ERROR] %s Caused by:\n", e);
-        Throwables.getRootCause(e).printStackTrace();
-      }
-    }
-    return resources;
-  }
+	}
 
-  public static <T extends Resource> T buildResource(ResourceHandle handle, Class<T> type)
-          throws ResourceInitializationException {
-    Map<String, Object> tuples = Maps.newLinkedHashMap();
-    try {
-      Class<? extends Resource> resourceClass = loadFromClassOrInherit(handle, Resource.class,
-              tuples);
-      return buildResource(resourceClass, tuples, type);
-    } catch (Exception e) {
-      throw new ResourceInitializationException(
-              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
-                  type.getCanonicalName(), handle }, e);
-    }
-  }
+	public static AnalysisEngine produceAnalysisEngine(@Nullable UimaContext c,
+			AnalysisEngineDescription aeDesc)
+			throws ResourceInitializationException {
+		AnalysisEngine ae;
+		if (c != null) {
+			ae = UIMAFramework.produceAnalysisEngine(aeDesc,
+					((UimaContextAdmin) c).getResourceManager(), null);
+		} else {
+			ae = UIMAFramework.produceAnalysisEngine(aeDesc);
+		}
+		return ae;
+	}
 
-  private static <T extends Resource> T buildResource(Class<? extends Resource> resourceClass,
-          Map<String, Object> tuples, Class<T> type) throws Exception {
-    CustomResourceSpecifier spec = new CustomResourceSpecifier_impl();
-    spec.setResourceClassName(resourceClass.getName());
-    Resource resource = UIMAFramework.produceResource(spec, tuples);
-    return type.cast(resource);
-  }
+	public static <T> T createFromName(String name, Class<T> type)
+			throws ClassNotFoundException, InstantiationException,
+			IllegalAccessException {
+		Class<? extends T> clazz = Class.forName(name).asSubclass(type);
+		return clazz.newInstance();
+	}
 
-  public static Object[] getParamList(Map<String, Object> tuples) {
-    List<Object> params = Lists.newArrayList();
-    for (Map.Entry<String, Object> me : tuples.entrySet()) {
-      params.add(me.getKey());
-      params.add(cast(me.getValue()));
-    }
-    return params.toArray();
-  }
+	private static ResourceHandle buildHandleFromString(String name) {
+		String[] values = name.split("!");
+		return ResourceHandle.newHandle(values[0], values[1]);
+	}
 
-  private static Object cast(Object o) {
-    if (o instanceof Iterable) {
-      List<?> list = Lists.newArrayList((Iterable<?>) o);
-      Object k = list.get(0);
-      if (k instanceof String) {
-        return list.toArray(new String[0]);
-      } else if (k instanceof Integer) {
-        return list.toArray(new Integer[0]);
-      } else if (k instanceof Float) {
-        return list.toArray(new Float[0]);
-      } else if (k instanceof Double) {
-        List<Float> bogus = Lists.newArrayList();
-        for (Object j : list) {
-          bogus.add(((Double) j).floatValue());
-        }
-        return bogus.toArray(new Float[0]);
-      } else if (list.get(0) instanceof Boolean) {
-        return list.toArray(new Boolean[0]);
-      }
-    } else if (o instanceof Double) {
-      return ((Double) o).floatValue();
-    }
-    return o;
-  }
+	public static ResourceHandle buildHandleFromMap(Map<String, String> map) {
+		Map.Entry<String, String> name = Iterators.get(map.entrySet()
+				.iterator(), 0);
+		return ResourceHandle.newHandle(name.getKey(), name.getValue());
+	}
 
-  public static <C> Class<? extends C> getFromClassOrInherit(AnyObject descriptor,
-          Class<C> ifaceClass, Map<String, Object> tuples) throws Exception {
-    for (AnyTuple tuple : descriptor.getTuples()) {
-      if (!FILTER.contains(tuple.getKey())) {
-        if (!tuples.containsKey(tuple.getKey())) {
-          tuples.put(tuple.getKey(), tuple.getObject());
-        }
-      }
-    }
-    String name = descriptor.getString("class");
-    if (name != null) {
-      return Class.forName(name).asSubclass(ifaceClass);
-    } else {
-      String resource = descriptor.getString("inherit");
-      if (resource != null) {
-        AnyObject yaml = ConfigurationLoader.load(resource);
-        return getFromClassOrInherit(yaml, ifaceClass, tuples);
-      } else {
-        throw new IllegalArgumentException(
-                "Illegal experiment descriptor, must contain one node of type <class> or <inherit>");
-      }
-    }
-  }
+	public static ResourceHandle buildHandleFromObject(AnyObject object) {
+		AnyTuple name = Iterables.get(object.getTuples(), 0);
+		return ResourceHandle.newHandle(name.getKey(),
+				(String) name.getObject());
+	}
 
-  public static <C> Class<? extends C> loadFromClassOrInherit(ResourceHandle resource,
-          Class<C> ifaceClass, Map<String, Object> tuples) throws Exception {
-    if (resource.getType() == HandleType.CLASS) {
-      return Class.forName(resource.resource).asSubclass(ifaceClass);
-    } else {
-      if (resource.getType() == HandleType.INHERIT) {
-        AnyObject yaml = ConfigurationLoader.load(resource.resource);
-        return getFromClassOrInherit(yaml, ifaceClass, tuples);
-      } else {
-        throw new IllegalArgumentException(
-                "Illegal experiment descriptor, must contain one node of type <class> or <inherit>");
-      }
-    }
-  }
+	private static void appendMethodSignature(StringBuilder sb,
+			Map<String, Object> tuples) {
+		Map<String, String> ftuples = Maps.transformValues(tuples,
+				new ObjectFormatter());
+		sb.append("[");
+		Joiner.MapJoiner joiner = Joiner.on("#").withKeyValueSeparator(":");
+		joiner.appendTo(sb, ftuples);
+		sb.append("]");
+	}
 
-  public static AnalysisEngineDescription createAnalysisEngineDescription(
-          Map<String, Object> tuples, Class<? extends AnalysisComponent> comp)
-          throws ResourceInitializationException {
-    Object[] params = getParamList(tuples);
-    AnalysisEngineDescription aeDesc = AnalysisEngineFactory.createPrimitiveDescription(comp,
-            params);
-    StringBuilder sb = new StringBuilder(comp.getSimpleName());
-    if (params.length > 0) {
-      appendMethodSignature(sb, tuples);
-    }
-    String name = sb.toString().replaceAll("\n", " ").trim();
-    aeDesc.getAnalysisEngineMetaData().setName(name);
-    return aeDesc;
+	private final static class ObjectFormatter implements
+			Function<Object, String> {
 
-  }
+		@Override
+		public String apply(Object o) {
+			if (o instanceof Iterable) {
+				Joiner joiner = Joiner.on("#");
+				return joiner.join((Iterable<?>) o).toString();
+			}
+			return o.toString();
+		}
 
-  public static AnalysisEngine produceAnalysisEngine(@Nullable UimaContext c,
-          AnalysisEngineDescription aeDesc) throws ResourceInitializationException {
-    AnalysisEngine ae;
-    if (c != null) {
-      ae = UIMAFramework.produceAnalysisEngine(aeDesc, ((UimaContextAdmin) c).getResourceManager(),
-              null);
-    } else {
-      ae = UIMAFramework.produceAnalysisEngine(aeDesc);
-    }
-    return ae;
-  }
+	}
 
-  public static <T> T createFromName(String name, Class<T> type) throws ClassNotFoundException,
-          InstantiationException, IllegalAccessException {
-    Class<? extends T> clazz = Class.forName(name).asSubclass(type);
-    return clazz.newInstance();
-  }
+	// These methods are preserved for compatibility with the old version of
+	// PhaseImpl
 
-  private static ResourceHandle buildHandleFromString(String name) {
-    String[] values = name.split("!");
-    return ResourceHandle.newHandle(values[0], values[1]);
-  }
+	@Deprecated
+	public static <C> Class<? extends C> loadFromClassOrInherit(String handle,
+			Class<C> ifaceClass, Map<String, Object> tuples) throws Exception {
+		String[] name = handle.split("!");
+		if (name[0].equals("class")) {
+			return Class.forName(name[1]).asSubclass(ifaceClass);
+		} else {
+			if (name[0].equals("inherit")) {
+				AnyObject yaml = ConfigurationLoader.load(name[1]);
+				return getFromClassOrInherit(yaml, ifaceClass, tuples);
+			} else {
+				throw new IllegalArgumentException(
+						"Illegal experiment descriptor, must contain one node of type <class> or <inherit>");
+			}
+		}
+	}
 
-  public static ResourceHandle buildHandleFromMap(Map<String, String> map) {
-    Map.Entry<String, String> name = Iterators.get(map.entrySet().iterator(), 0);
-    return ResourceHandle.newHandle(name.getKey(), name.getValue());
-  }
+	@Deprecated
+	public static AnalysisEngine createAnalysisEngine(@Nullable UimaContext c,
+			Map<String, Object> tuples, Class<? extends AnalysisComponent> comp)
+			throws ResourceInitializationException {
+		Object[] params = getParamList(tuples);
+		AnalysisEngineDescription aeDesc = AnalysisEngineFactory
+				.createPrimitiveDescription(comp, params);
+		StringBuilder sb = new StringBuilder(comp.getSimpleName());
+		if (params.length > 0) {
+			appendMethodSignature(sb, tuples);
+		}
+		aeDesc.getAnalysisEngineMetaData().setName(sb.toString());
+		System.out.println("\t- " + sb.toString());
+		AnalysisEngine ae;
+		if (c != null) {
+			ae = UIMAFramework.produceAnalysisEngine(aeDesc,
+					((UimaContextAdmin) c).getResourceManager(), null);
+		} else {
+			ae = UIMAFramework.produceAnalysisEngine(aeDesc);
+		}
+		return ae;
+	}
 
-  public static ResourceHandle buildHandleFromObject(AnyObject object) {
-    AnyTuple name = Iterables.get(object.getTuples(), 0);
-    return ResourceHandle.newHandle(name.getKey(), (String) name.getObject());
-  }
+	public static <T extends Resource> List<T> createResourceList(Object o,
+			Class<T> type) {
+		List<T> resources = null;
+		if (o instanceof String) {
+			String description = (String) o;
+			Yaml yaml = new Yaml();
+			@SuppressWarnings("unchecked")
+			List<Map<String, String>> ao = (List<Map<String, String>>) yaml
+					.load(description);
+			resources = createResourceList(ao, type);
+		} else {
+			// TODO: Remove this deprecated call at some point in time
+			String[] expListenerNames = (String[]) o;
+			resources = createResourceList(expListenerNames, type);
+		}
+		return resources;
+	}
 
-  private static void appendMethodSignature(StringBuilder sb, Map<String, Object> tuples) {
-    Map<String, String> ftuples = Maps.transformValues(tuples, new ObjectFormatter());
-    sb.append("[");
-    Joiner.MapJoiner joiner = Joiner.on("#").withKeyValueSeparator(":");
-    joiner.appendTo(sb, ftuples);
-    sb.append("]");
-  }
-
-  private final static class ObjectFormatter implements Function<Object, String> {
-
-    @Override
-    public String apply(Object o) {
-      if (o instanceof Iterable) {
-        Joiner joiner = Joiner.on("#");
-        return joiner.join((Iterable<?>) o).toString();
-      }
-      return o.toString();
-    }
-
-  }
-
-  // These methods are preserved for compatibility with the old version of PhaseImpl
-
-  @Deprecated
-  public static <C> Class<? extends C> loadFromClassOrInherit(String handle, Class<C> ifaceClass,
-          Map<String, Object> tuples) throws Exception {
-    String[] name = handle.split("!");
-    if (name[0].equals("class")) {
-      return Class.forName(name[1]).asSubclass(ifaceClass);
-    } else {
-      if (name[0].equals("inherit")) {
-        AnyObject yaml = ConfigurationLoader.load(name[1]);
-        return getFromClassOrInherit(yaml, ifaceClass, tuples);
-      } else {
-        throw new IllegalArgumentException(
-                "Illegal experiment descriptor, must contain one node of type <class> or <inherit>");
-      }
-    }
-  }
-
-  @Deprecated
-  public static AnalysisEngine createAnalysisEngine(@Nullable UimaContext c,
-          Map<String, Object> tuples, Class<? extends AnalysisComponent> comp)
-          throws ResourceInitializationException {
-    Object[] params = getParamList(tuples);
-    AnalysisEngineDescription aeDesc = AnalysisEngineFactory.createPrimitiveDescription(comp,
-            params);
-    StringBuilder sb = new StringBuilder(comp.getSimpleName());
-    if (params.length > 0) {
-      appendMethodSignature(sb, tuples);
-    }
-    aeDesc.getAnalysisEngineMetaData().setName(sb.toString());
-    System.out.println("\t- " + sb.toString());
-    AnalysisEngine ae;
-    if (c != null) {
-      ae = UIMAFramework.produceAnalysisEngine(aeDesc, ((UimaContextAdmin) c).getResourceManager(),
-              null);
-    } else {
-      ae = UIMAFramework.produceAnalysisEngine(aeDesc);
-    }
-    return ae;
-  }
-
-  public static <T extends Resource> List<T> createResourceList(Object o, Class<T> type) {
-    List<T> resources = null;
-    if (o instanceof String) {
-      String description = (String) o;
-      Yaml yaml = new Yaml();
-      @SuppressWarnings("unchecked")
-      List<Map<String, String>> ao = (List<Map<String, String>>) yaml.load(description);
-      resources = createResourceList(ao, type);
-    } else {
-      // TODO: Remove this deprecated call at some point in time
-      String[] expListenerNames = (String[]) o;
-      resources = createResourceList(expListenerNames, type);
-    }
-    return resources;
-  }
-
-  @Deprecated
-  private static <T extends Resource> List<T> createResourceList(String[] names, Class<T> type) {
-    System.err
-            .println("The bang syntax (!) for resource creation is deprecated please use the string (|) syntax instead: 'parameter: |\\n - [inherit|class]: fully.qualified.name'");
-    System.err.println(" Offending configuration: " + Arrays.toString(names));
-    List<T> resources = Lists.newArrayList();
-    for (String name : names) {
-      try {
-        ResourceHandle handle = buildHandleFromString(name);
-        resources.add(buildResource(handle, type));
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
-    return resources;
-  }
+	@Deprecated
+	private static <T extends Resource> List<T> createResourceList(
+			String[] names, Class<T> type) {
+		System.err
+				.println("The bang syntax (!) for resource creation is deprecated please use the string (|) syntax instead: 'parameter: |\\n - [inherit|class]: fully.qualified.name'");
+		System.err.println(" Offending configuration: "
+				+ Arrays.toString(names));
+		List<T> resources = Lists.newArrayList();
+		for (String name : names) {
+			try {
+				ResourceHandle handle = buildHandleFromString(name);
+				resources.add(buildResource(handle, type));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return resources;
+	}
 
 }

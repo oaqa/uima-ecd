@@ -34,38 +34,39 @@ import edu.cmu.lti.oaqa.framework.types.CurrentExecution;
 
 public abstract class TerminableComponent extends JCasAnnotator_ImplBase {
 
-  private String terminatedIdHash;
-  
-  private String executionIdHash;
+	private String terminatedIdHash;
 
-  @Override
-  public void initialize(UimaContext c) throws ResourceInitializationException {
-    PhaseEventBus.registerForTerminateEvent(this);
-  }
+	private String executionIdHash;
 
-  @Subscribe
-  public void terminate(TerminateEvent event) {
-    String eventIdHash = event.getIdHash();
-    if (eventIdHash.equals(executionIdHash)) {
-      terminatedIdHash = executionIdHash;
-    }
-  }
-  
-  @Override
-  public void process(JCas jcas) throws AnalysisEngineProcessException {
-    CurrentExecution ce = CasUtils.getLast(jcas, CurrentExecution.class);
-    this.executionIdHash = ce.getIdHash();
-  }
-  
-  /**
-   * Checks if the component is still alive, throws an IllegalStateException otherwise.
-   * Components usually call this method on the process method to find if they should 
-   * keep processing.
-   */
-  protected void testAliveness() {
-    if (executionIdHash.equals(terminatedIdHash)) {
-      throw new IllegalStateException("Component already terminated");
-    }
-  }
+	@Override
+	public void initialize(UimaContext c)
+			throws ResourceInitializationException {
+		PhaseEventBus.registerForTerminateEvent(this);
+	}
+
+	@Subscribe
+	public void terminate(TerminateEvent event) {
+		String eventIdHash = event.getIdHash();
+		if (eventIdHash.equals(executionIdHash)) {
+			terminatedIdHash = executionIdHash;
+		}
+	}
+
+	@Override
+	public void process(JCas jcas) throws AnalysisEngineProcessException {
+		CurrentExecution ce = CasUtils.getLast(jcas, CurrentExecution.class);
+		this.executionIdHash = ce.getIdHash();
+	}
+
+	/**
+	 * Checks if the component is still alive, throws an IllegalStateException
+	 * otherwise. Components usually call this method on the process method to
+	 * find if they should keep processing.
+	 */
+	protected void testAliveness() {
+		if (executionIdHash.equals(terminatedIdHash)) {
+			throw new IllegalStateException("Component already terminated");
+		}
+	}
 
 }

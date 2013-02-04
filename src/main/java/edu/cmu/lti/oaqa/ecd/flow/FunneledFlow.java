@@ -22,6 +22,6 @@ import edu.cmu.lti.oaqa.ecd.phase.Trace;
 
 public interface FunneledFlow extends FixedFlow {
 
- boolean funnel(Trace trace);
+	boolean funnel(Trace trace);
 
 }

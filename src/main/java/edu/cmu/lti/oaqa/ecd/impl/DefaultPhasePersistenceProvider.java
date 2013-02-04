@@ -25,44 +25,47 @@ import org.xml.sax.SAXException;
 import edu.cmu.lti.oaqa.ecd.phase.CasDeserializer;
 import edu.cmu.lti.oaqa.ecd.phase.ExecutionStatus;
 
-public class DefaultPhasePersistenceProvider extends AbstractPhasePersistenceProvider {
+public class DefaultPhasePersistenceProvider extends
+		AbstractPhasePersistenceProvider {
 
-  @Override
-  public void insertExecutionTrace(String optionId, String sequenceId, String dataset,
-          Integer phaseNo2, String uuid, long startTime, String hostName, String trace, String key)
-          throws IOException {
-    // TODO Auto-generated method stub
+	@Override
+	public void insertExecutionTrace(String optionId, String sequenceId,
+			String dataset, Integer phaseNo2, String uuid, long startTime,
+			String hostName, String trace, String key) throws IOException {
+		// TODO Auto-generated method stub
 
-  }
+	}
 
-  @Override
-  public void storeCas(byte[] bytes, ExecutionStatus success, long endTime, String key)
-          throws IOException {
-    // TODO Auto-generated method stub
+	@Override
+	public void storeCas(byte[] bytes, ExecutionStatus success, long endTime,
+			String key) throws IOException {
+		// TODO Auto-generated method stub
 
-  }
+	}
 
-  @Override
-  public void storeException(byte[] bytes, ExecutionStatus failure, long endTime, String key)
-          throws IOException, SAXException {
-    // TODO Auto-generated method stub
+	@Override
+	public void storeException(byte[] bytes, ExecutionStatus failure,
+			long endTime, String key) throws IOException, SAXException {
+		// TODO Auto-generated method stub
 
-  }
+	}
 
-  @Override
-  public CasDeserializer deserialize(JCas jcas, String hash) throws SQLException {
-    return new CasDeserializer() {
-      @Override
-      public boolean processedCas() {
-        return false;
-      }
-    };
-  }
+	@Override
+	public CasDeserializer deserialize(JCas jcas, String hash)
+			throws SQLException {
+		return new CasDeserializer() {
+			@Override
+			public boolean processedCas() {
+				return false;
+			}
+		};
+	}
 
-  @Override
-  public void insertExperimentMeta(String experimentId, int phaseNo, int stageId, int size) {
-    // TODO Auto-generated method stub
+	@Override
+	public void insertExperimentMeta(String experimentId, int phaseNo,
+			int stageId, int size) {
+		// TODO Auto-generated method stub
 
-  }
+	}
 
 }

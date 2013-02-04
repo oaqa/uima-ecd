@@ -25,19 +25,24 @@ import org.apache.uima.resource.Resource;
 
 public interface ExperimentBuilder {
 
-  String getExperimentUuid();
+	String getExperimentUuid();
 
-  CollectionReader buildCollectionReader(AnyObject configuration, int id) throws Exception;
+	CollectionReader buildCollectionReader(AnyObject configuration, int id)
+			throws Exception;
 
-  AnalysisEngine buildPipeline(AnyObject configuration, String string, int id) throws Exception;
+	AnalysisEngine buildPipeline(AnyObject configuration, String string, int id)
+			throws Exception;
 
-  AnalysisEngine buildPipeline(AnyObject configuration, String string, int id, FixedFlow funnel) throws Exception;
+	AnalysisEngine buildPipeline(AnyObject configuration, String string,
+			int id, FixedFlow funnel) throws Exception;
 
-  AnalysisEngine buildPipeline(AnyObject config, String string, int i, FixedFlow object, boolean b) throws Exception;
+	AnalysisEngine buildPipeline(AnyObject config, String string, int i,
+			FixedFlow object, boolean b) throws Exception;
 
-  AnalysisEngine createNoOpEngine() throws Exception;
+	AnalysisEngine createNoOpEngine() throws Exception;
 
-  <T extends Resource> T initializeResource(AnyObject config, String node, Class<T> type) throws Exception;
+	<T extends Resource> T initializeResource(AnyObject config, String node,
+			Class<T> type) throws Exception;
 
-  AnyObject getConfiguration();
+	AnyObject getConfiguration();
 }

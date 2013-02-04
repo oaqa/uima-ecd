@@ -24,18 +24,19 @@ import org.apache.uima.resource.Resource;
 import org.xml.sax.SAXException;
 
 public interface PhasePersistenceProvider extends Resource {
-  void insertExecutionTrace(String optionId, String sequenceId, String dataset,
-          Integer phaseNo2, String uuid, long startTime, String hostName, String trace, String key)
-          throws IOException;
+	void insertExecutionTrace(String optionId, String sequenceId,
+			String dataset, Integer phaseNo2, String uuid, long startTime,
+			String hostName, String trace, String key) throws IOException;
 
-  void storeCas(byte[] bytes, ExecutionStatus success, long endTime, String key)
-          throws IOException;
+	void storeCas(byte[] bytes, ExecutionStatus success, long endTime,
+			String key) throws IOException;
 
-  void storeException(byte[] bytes, ExecutionStatus failure, long endTime, String key)
-          throws IOException, SAXException;
+	void storeException(byte[] bytes, ExecutionStatus failure, long endTime,
+			String key) throws IOException, SAXException;
 
-  CasDeserializer deserialize(JCas jcas, String hash) throws SQLException;
+	CasDeserializer deserialize(JCas jcas, String hash) throws SQLException;
 
-  void insertExperimentMeta(String experimentId, int phaseNo, int stageId, int size);
+	void insertExperimentMeta(String experimentId, int phaseNo, int stageId,
+			int size);
 
 }
