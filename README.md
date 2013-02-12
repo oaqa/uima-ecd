@@ -5,7 +5,11 @@ uima-ecd
 
 Extended Configuration Description for UIMA pipelines. 
 
-The Extended Configuration Description (ECD) module, is a set of capabilities built on top of [UIMA](http://uima.apache.org/) and [uimaFIT](http://code.google.com/p/uimafit/), that allows the creation of declarative UIMA pipelines form a configuration file.
+The Extended Configuration Description (ECD) module, is a set of capabilities built on top of [UIMA](http://uima.apache.org/) 
+and [uimaFIT](http://code.google.com/p/uimafit/), that allow the creation of declarative UIMA pipelines form a 
+configuration file.
+
+The ECD allows the declaration of combinatorial parameters on each ofthe options, a key component for [experiment configuration exploration](https://github.com/oaqa/cse-framework). 
 
 An ECD must have the following sections:
  - configuration
