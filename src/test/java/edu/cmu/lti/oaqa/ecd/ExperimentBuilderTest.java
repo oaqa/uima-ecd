@@ -41,6 +41,11 @@ public class ExperimentBuilderTest {
   }
   
   @Test
+  public void testMergePipeline() throws Exception {
+    testPipelineSetup("test.merge-ecd-example");
+  }
+  
+  @Test
   public void testPrimitiveValuesPipeline() throws Exception {
     testPipelineSetup("test.primitive-value-example");
   }
