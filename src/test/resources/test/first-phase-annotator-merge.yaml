@@ -1,0 +1,5 @@
+class: edu.cmu.lti.oaqa.ecd.example.MergePhaseAnnotator
+foo: bar
+cross-opts:
+  parameter-a: [[a,b,c]]
+  parameter-b: [[0.0,0.3,0.7],[0.2,0.4,0.2]]

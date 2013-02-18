@@ -105,7 +105,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     } else {
       this.lazyLoadOptions = lazyLoadOpts.booleanValue();
     }
-    System.out.println("Phase: " + toString());
+    System.out.printf("Phase: %s (lazy-load=%s)\n", toString(), lazyLoadOptions);
     String experimentId = (String) ctx
             .getConfigParameterValue(BaseExperimentBuilder.EXPERIMENT_UUID_PROPERTY);
     String optDescr = (String) ctx.getConfigParameterValue("options");
