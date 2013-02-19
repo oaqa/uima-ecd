@@ -11,6 +11,8 @@ configuration file.
 
 The ECD enables declaration of combinatorial parameters across options which is a very useful feature for experiment [configuration space exploration](https://github.com/oaqa/cse-framework). 
 
+For in detail information please refer to the [OAQA tutorial](https://github.com/oaqa/oaqa-tutorial/wiki/Tutorial).
+
 An ECD must have the following sections:
  - configuration
  - collection-reader
