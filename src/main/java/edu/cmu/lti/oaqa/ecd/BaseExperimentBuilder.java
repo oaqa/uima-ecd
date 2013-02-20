@@ -16,6 +16,8 @@
 
 package edu.cmu.lti.oaqa.ecd;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -159,7 +161,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   @Override
   public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId,
           FixedFlow funnel, boolean outputNewCASes) throws Exception {
-    loadTypePriorities(config);
+    this.typePriorities = loadTypePriorities(config);
     Iterable<AnyObject> iterable = config.getIterable(pipeline);
     FlowControllerDescription fcd = FlowControllerFactory
             .createFlowControllerDescription(FixedFlowController797182.class);
@@ -171,6 +173,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
     aee.getAnalysisEngineMetaData().getOperationalProperties().setOutputsNewCASes(outputNewCASes);
     aee.getAnalysisEngineMetaData().setName(pipeline);
+
     return AnalysisEngineFactory.createAggregate(aee);
   }
 
@@ -186,15 +189,16 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     return builder.createAggregateDescription();
   }
 
-  private String[] getFromListOrInherit(AnyObject descriptor, String listName) throws IOException {
+  public static String[] getFromListOrInherit(AnyObject descriptor, String listName)
+          throws IOException {
     Iterable<String> iterable = descriptor.getIterable(listName);
     if (iterable != null) {
-      ArrayList<String> typePrioritiesList = new ArrayList<String>();
-      for (String type : iterable) {
-        typePrioritiesList.add(type);
-        System.out.println("Loaded type priorities: " + type);
+      ArrayList<String> valueList = new ArrayList<String>();
+      for (String listItem : iterable) {
+        valueList.add(listItem);
+        // System.out.println("Loaded list item: " + type);
       }
-      return typePrioritiesList.toArray(new String[0]);
+      return valueList.toArray(new String[0]);
     } else {
       String resource = descriptor.getString("inherit");
       if (resource != null) {
@@ -209,18 +213,20 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   }
 
   // Load type priorities
-  private void loadTypePriorities(AnyObject config) {
-    AnyObject tpObject = config.getAnyObject("type-priorities");
+  public static TypePriorities loadTypePriorities(AnyObject config) {
+    AnyObject tpObject = config.getAnyObject("createPrimitiveDescription");
     if (tpObject == null) {
-      return;
+      return null;
     }
+    TypePriorities typePriorities = null;
     try {
       String[] typePrioritiesArray = getFromListOrInherit(tpObject, "type-list");
-      this.typePriorities = TypePrioritiesFactory.createTypePriorities(typePrioritiesArray);
+      typePriorities = TypePrioritiesFactory.createTypePriorities(typePrioritiesArray);
     } catch (IOException e) {
       System.err.println("Failed to load type-priorities.");
       e.printStackTrace();
     }
+    return typePriorities;
   }
 
   // Made this method public to invoke it from BasePhaseTest
@@ -237,6 +243,10 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
             typeSystem, typePriorities, params);
     String name = (String) tuples.get("name");
     description.getAnalysisEngineMetaData().setName(name);
+    // System.out.println("aeDescription.toString()"+tuples.toString());
+    System.out
+            .println(description.getMetaData().getConfigurationParameterDeclarations().toString());
+    description.toXML(new FileOutputStream(File.createTempFile("buildComponent", ".xml")));
     return description;
   }
 
@@ -450,8 +460,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
 
   }
 
-  public static AnalysisEngine produceAnalysisEngine(@Nullable UimaContext c,
-          AnalysisEngineDescription aeDesc) throws ResourceInitializationException {
+  public static AnalysisEngine produceAnalysisEngine(@Nullable
+  UimaContext c, AnalysisEngineDescription aeDesc) throws ResourceInitializationException {
     AnalysisEngine ae;
     if (c != null) {
       ae = UIMAFramework.produceAnalysisEngine(aeDesc, ((UimaContextAdmin) c).getResourceManager(),
@@ -524,8 +534,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   }
 
   @Deprecated
-  public static AnalysisEngine createAnalysisEngine(@Nullable UimaContext c,
-          Map<String, Object> tuples, Class<? extends AnalysisComponent> comp)
+  public static AnalysisEngine createAnalysisEngine(@Nullable
+  UimaContext c, Map<String, Object> tuples, Class<? extends AnalysisComponent> comp)
           throws ResourceInitializationException {
     Object[] params = getParamList(tuples);
     AnalysisEngineDescription aeDesc = AnalysisEngineFactory.createPrimitiveDescription(comp,
