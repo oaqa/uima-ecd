@@ -243,10 +243,6 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
             typeSystem, typePriorities, params);
     String name = (String) tuples.get("name");
     description.getAnalysisEngineMetaData().setName(name);
-    // System.out.println("aeDescription.toString()"+tuples.toString());
-    System.out
-            .println(description.getMetaData().getConfigurationParameterDeclarations().toString());
-    description.toXML(new FileOutputStream(File.createTempFile("buildComponent", ".xml")));
     return description;
   }
 
