@@ -23,6 +23,8 @@ import org.apache.uima.analysis_engine.metadata.FixedFlow;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.resource.Resource;
 
+import edu.cmu.lti.oaqa.ecd.collection.KnownSizeCollectionReader;
+
 public interface ExperimentBuilder {
 
   String getExperimentUuid();
@@ -35,6 +37,8 @@ public interface ExperimentBuilder {
 
   AnalysisEngine buildPipeline(AnyObject config, String string, int i, FixedFlow object, boolean b) throws Exception;
 
+  AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId, FixedFlow funnel, boolean outputNewCASes, String classTag) throws Exception;
+  
   AnalysisEngine createNoOpEngine() throws Exception;
 
   <T extends Resource> T initializeResource(AnyObject config, String node, Class<T> type) throws Exception;

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2012 Carnegie Mellon University
+ *  Copyright 2012 Carnegie Meshufflellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,12 +16,16 @@
 
 package edu.cmu.lti.oaqa.ecd.driver;
 
+import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 import mx.bigdata.anyobject.AnyObject;
 
 import org.apache.uima.analysis_engine.AnalysisEngine;
+import org.apache.uima.analysis_engine.metadata.FixedFlow;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -32,6 +36,7 @@ import com.google.common.collect.Lists;
 
 import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.ExperimentBuilder;
+import edu.cmu.lti.oaqa.ecd.collection.KnownSizeCollectionReader;
 import edu.cmu.lti.oaqa.ecd.config.Stage;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfiguration;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfigurationImpl;
@@ -41,14 +46,22 @@ import edu.cmu.lti.oaqa.ecd.impl.DefaultFunnelingStrategy;
 
 public final class ECDDriver {
 
+  public static final String TRAIN_CLASS = "train-class";
+  public static final String TEST_CLASS = "class";
+  
+  public static final String TRAIN_CONFIG = "train-config";
+
   private final ExperimentBuilder builder;
 
   private final AnyObject config;
 
   private final List<Long> processedItems = Lists.newArrayList();
+  private TypeSystemDescription typeSystem;
+  private String resource;
   
   public ECDDriver(String resource, String uuid) throws Exception {
-    TypeSystemDescription typeSystem = TypeSystemDescriptionFactory.createTypeSystemDescription();
+    typeSystem = TypeSystemDescriptionFactory.createTypeSystemDescription();
+    this.resource = resource;
     this.builder = new BaseExperimentBuilder(uuid, resource, typeSystem);
     this.config = builder.getConfiguration();
   }
@@ -57,22 +70,103 @@ public final class ECDDriver {
     StagedConfiguration stagedConfig = new StagedConfigurationImpl(config);
     FunnelingStrategy ps = getProcessingStrategy();
     for (Stage stage : stagedConfig) {
-      FunneledFlow funnel = ps.newFunnelStrategy(builder.getExperimentUuid());
       AnyObject conf = stage.getConfiguration();
-      CollectionReader reader = builder.buildCollectionReader(conf, stage.getId());
-      AnalysisEngine pipeline = builder.buildPipeline(conf, "pipeline", stage.getId(), funnel);
-      if (conf.getIterable("post-process") != null) {
-        AnalysisEngine post = builder.buildPipeline(conf, "post-process", stage.getId());
-        SimplePipelineRev803.runPipeline(reader, pipeline, post);
-      } else {
-        SimplePipelineRev803.runPipeline(reader, pipeline);
+      AnyObject trainConf =  conf.getAnyObject(TRAIN_CONFIG);
+      if(trainConf == null){
+        singleRun(conf, stage, ps);
+      }else{
+        splitRun(conf, stage, ps);
       }
-      Progress progress = reader.getProgress()[0];
-      long total = progress.getCompleted();
+    }
+  }
+  
+  private void singleRun(AnyObject conf,  Stage stage, FunnelingStrategy ps) throws Exception{
+    FunneledFlow funnel = ps.newFunnelStrategy(builder.getExperimentUuid());
+    CollectionReader reader = builder.buildCollectionReader(conf, stage.getId());
+    AnalysisEngine pipeline = builder.buildPipeline(conf, "pipeline", stage.getId(), funnel);
+    if (conf.getIterable("post-process") != null) {
+      AnalysisEngine post = builder.buildPipeline(conf, "post-process", stage.getId());
+      SimplePipelineRev803.runPipeline(reader, pipeline, post);
+    } else {
+      SimplePipelineRev803.runPipeline(reader, pipeline);
+    }
+    Progress progress = reader.getProgress()[0];
+    long total = progress.getCompleted();
+    processedItems.add(total);
+  }
+  
+  private void splitRun(AnyObject conf,  Stage stage, FunnelingStrategy ps) throws Exception{
+  
+    AnyObject trainConf =  conf.getAnyObject(TRAIN_CONFIG);
+    Double testRatio = trainConf.getDouble("test-ratio", 0.5);
+    Boolean shuffle = trainConf.getBoolean("shuffle", false);
+    Integer fold = trainConf.getInteger("crossvalidation-fold", 1);
+    
+    System.out.println(MessageFormat.format("TRAIN_CONFIG:trainRatio:{0} shuffle:{1} fold:{2}", testRatio, shuffle, fold));
+    
+    KnownSizeCollectionReader reader = (KnownSizeCollectionReader) builder.buildCollectionReader(conf, stage.getId());
+    int totalSize = reader.size();
+    int[] posMapping = createPositionMapping(totalSize, shuffle);
+    int testSize;
+    if(fold == 1){
+      testSize = (int) (testRatio*totalSize);
+    }else{
+      testSize = totalSize/fold;
+    }
+    
+    for (int i = 0; i < fold; i++) {
+      System.out.println("Fold "+i);
+      int offset = (int) (totalSize*i/fold);
+      int[] pipelineAssignments = createPipelineAssignments(posMapping, offset, testSize);
+
+      
+      BaseExperimentBuilder foldExpBuilder = new BaseExperimentBuilder(UUID.randomUUID().toString(), resource, typeSystem);
+
+      FunneledFlow funnel = ps.newFunnelStrategy(foldExpBuilder.getExperimentUuid());
+      reader = (KnownSizeCollectionReader) foldExpBuilder.buildCollectionReader(conf, stage.getId());
+      AnalysisEngine[] trainPipeline = createPipeline(foldExpBuilder, conf, stage, funnel, TRAIN_CLASS);
+      AnalysisEngine[] testPipeline = createPipeline(foldExpBuilder, conf, stage, funnel, TEST_CLASS);
+      SimplePipelineRev803.runPipelineWithinDuty(reader, pipelineAssignments, 0, trainPipeline);
+      long total = SimplePipelineRev803.runPipelineWithinDuty(reader, pipelineAssignments, 1, testPipeline);
       processedItems.add(total);
     }
   }
   
+  private AnalysisEngine[] createPipeline(BaseExperimentBuilder foldExpBuilder, AnyObject conf, Stage stage, FixedFlow funnel, String classTag) throws Exception{
+    AnalysisEngine pipeline = foldExpBuilder.buildPipeline(conf, "pipeline", stage.getId(), funnel, false, classTag);
+    if (conf.getIterable("post-process") != null) {
+      AnalysisEngine post = foldExpBuilder.buildPipeline(conf, "post-process", stage.getId(), null, false, classTag);
+      return new AnalysisEngine[]{pipeline, post};
+    } else {
+      return new AnalysisEngine[]{pipeline};
+    }
+  }
+  
+  private int[] createPipelineAssignments(int[] posMapping, int testStart, int testSize) {
+    int[] assignments = new int[posMapping.length];
+    Arrays.fill(assignments, testStart, testStart+testSize, 1);
+    return assignments;
+  }
+
+  private int[] createPositionMapping(int totalSize, boolean shuffle) {
+    Random rgen = new Random(0); // XXX constant random seed
+    int[] posMapping = new int[totalSize];
+
+    for (int i = 0; i < totalSize; i++) {
+      posMapping[i] = i;
+    }
+
+    if (shuffle) {
+      for (int i = 0; i < totalSize; i++) {
+        int randomPosition = rgen.nextInt(totalSize);
+        int temp = posMapping[i];
+        posMapping[i] = posMapping[randomPosition];
+        posMapping[randomPosition] = temp;
+      }
+    }
+    return posMapping;
+  }
+
   private FunnelingStrategy getProcessingStrategy() throws ResourceInitializationException {
     FunnelingStrategy ps = new DefaultFunnelingStrategy();
     AnyObject map = config.getAnyObject("processing-strategy");

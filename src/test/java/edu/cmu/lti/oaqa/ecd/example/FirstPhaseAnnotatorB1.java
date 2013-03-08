@@ -24,6 +24,6 @@ public class FirstPhaseAnnotatorB1 extends JCasAnnotator_ImplBase {
 
   @Override
   public void process(JCas jcas) throws AnalysisEngineProcessException {
-    System.out.printf("process: %s\n", getClass().getSimpleName());
+    System.out.printf("process: %s\n", getClass().getSimpleName() + "  "+jcas.getDocumentText());
   }
 }

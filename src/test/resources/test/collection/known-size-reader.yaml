@@ -1,0 +1,2 @@
+class: edu.cmu.lti.oaqa.ecd.example.collection.KnownSizeExampleCollectionReader
+total: 10

@@ -1,0 +1,13 @@
+configuration:
+  name: train-test
+  author: junit
+  
+collection-reader:
+  inherit: test.collection.known-size-reader
+
+
+train-config:
+  crossvalidation-fold: 5
+
+pipeline:
+  - inherit: test.train.trainable-annotator1

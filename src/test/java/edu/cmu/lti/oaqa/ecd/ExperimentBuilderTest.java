@@ -39,7 +39,7 @@ public class ExperimentBuilderTest {
   public void testSetupNonStagedPipeline() throws Exception {
     testPipelineSetup("test.nonstaged-ecd-example");
   }
-  
+
   @Test
   public void testPrimitiveValuesPipeline() throws Exception {
     testPipelineSetup("test.primitive-value-example");
@@ -49,12 +49,12 @@ public class ExperimentBuilderTest {
   public void testSetupStagedPipeline() throws Exception {
     testPipelineSetup("test.partial-ecd-example");
   }
-  
+
   @Test
   public void testDirectLoadTypePrioritiesPipeline() throws Exception {
     testPipelineSetup("test.type-priorities.direct-type-priorities-test");
   }
-  
+
   @Test
   public void testInheritLoadTypePrioritiesPipeline() throws Exception {
     testPipelineSetup("test.type-priorities.inherit-type-priorities-test");

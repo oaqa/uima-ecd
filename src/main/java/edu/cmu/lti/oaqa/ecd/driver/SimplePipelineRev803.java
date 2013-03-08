@@ -35,9 +35,12 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.collection.base_cpm.BaseCollectionReader;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ConfigurableResource;
 import org.apache.uima.resource.Resource;
+import org.apache.uima.resource.ResourceConfigurationException;
 import org.apache.uima.resource.metadata.ResourceMetaData;
 import org.apache.uima.util.CasCreationUtils;
+import org.apache.uima.util.Progress;
 
 // We added this file here to bring uimaFit 1.3.1 bug improved pipeline 
 // while preserving compatibility with UIMA 2.3.1
@@ -157,6 +160,47 @@ public final class SimplePipelineRev803 {
     } finally {
       collectionProcessComplete(engines);
       destroy(reader);
+    }
+  }
+  
+  public static long runPipelineWithinDuty(CollectionReader reader, int[] pipelineAssignments, int assignmentID, final AnalysisEngine... engines) throws UIMAException, IOException {
+    final List<ResourceMetaData> metaData = new ArrayList<ResourceMetaData>();
+    metaData.add(reader.getMetaData());
+    for (AnalysisEngine engine : engines) {
+      metaData.add(engine.getMetaData());
+    }
+
+    final CAS cas = CasCreationUtils.createCas(metaData);
+    try {
+      for (int i = 0; i < pipelineAssignments.length; i++) {
+        if(!reader.hasNext()){
+          throw new IllegalArgumentException("pipelineAssignments["+i+"] doesn't hasNext");
+        }
+        reader.getNext(cas);
+        if(pipelineAssignments[i] == assignmentID){
+          runPipeline(cas, engines);
+        }
+        cas.reset();
+      }
+      Progress progress = reader.getProgress()[0];
+      long total = progress.getCompleted();
+      return total;
+    } finally {
+      collectionProcessComplete(engines);
+//      destroy(reader);
+//      collectionProcessComplete(engines);
+//      reconfigure(engines);
+      reconfigure(reader);
+    }
+  }
+  
+  
+  public static void reconfigure(final ConfigurableResource... resources) throws ResourceConfigurationException
+  {
+    for (ConfigurableResource r : resources) {
+      if (r != null) {
+        r.reconfigure();
+      }
     }
   }
 

@@ -62,6 +62,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import edu.cmu.lti.oaqa.ecd.ResourceHandle.HandleType;
+import edu.cmu.lti.oaqa.ecd.collection.KnownSizeCollectionReader;
 import edu.cmu.lti.oaqa.ecd.config.ConfigurationLoader;
 import edu.cmu.lti.oaqa.ecd.flow.FixedFlowController797182;
 import edu.cmu.lti.oaqa.ecd.impl.DefaultExperimentPersistenceProvider;
@@ -95,7 +96,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     this.persistence = newPersistenceProvider(configuration);
     insertExperiment(configuration, resource);
   }
-
+  
   private ExperimentPersistenceProvider newPersistenceProvider(AnyObject config)
           throws ResourceInitializationException {
     AnyObject pprovider = config.getAnyObject("persistence-provider");
@@ -159,11 +160,17 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   @Override
   public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId,
           FixedFlow funnel, boolean outputNewCASes) throws Exception {
+    return buildPipeline(config, pipeline, stageId, funnel, outputNewCASes, "class");
+  }
+
+  @Override
+  public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId,
+          FixedFlow funnel, boolean outputNewCASes, String classTag) throws Exception {
     loadTypePriorities(config);
     Iterable<AnyObject> iterable = config.getIterable(pipeline);
     FlowControllerDescription fcd = FlowControllerFactory
             .createFlowControllerDescription(FixedFlowController797182.class);
-    AnalysisEngineDescription aee = buildPipeline(stageId, iterable, fcd);
+    AnalysisEngineDescription aee = buildPipeline(stageId, iterable, fcd, classTag);
     if (funnel != null) {
       FixedFlow fc = (FixedFlow) aee.getAnalysisEngineMetaData().getFlowConstraints();
       funnel.setFixedFlow(fc.getFixedFlow());
@@ -176,10 +183,15 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
 
   private AnalysisEngineDescription buildPipeline(int stageId, Iterable<AnyObject> pipeline,
           FlowControllerDescription fcd) throws Exception {
+    return buildPipeline(stageId, pipeline, fcd, "class");
+  }
+
+  private AnalysisEngineDescription buildPipeline(int stageId, Iterable<AnyObject> pipeline,
+          FlowControllerDescription fcd, String classTag) throws Exception {
     AggregateBuilder builder = new AggregateBuilder(null, null, fcd);
     int phase = 1;
     for (AnyObject aeDescription : pipeline) {
-      AnalysisEngineDescription description = buildComponent(stageId, phase, aeDescription);
+      AnalysisEngineDescription description = buildComponent(stageId, phase, aeDescription, classTag);
       builder.add(description);
       phase++;
     }
@@ -223,15 +235,20 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
   }
 
-  // Made this method public to invoke it from BasePhaseTest
   public AnalysisEngineDescription buildComponent(int stageId, int phase, AnyObject aeDescription)
+          throws Exception {
+    return buildComponent(stageId,  phase, aeDescription, "class");
+  }
+  
+  // Made this method public to invoke it from BasePhaseTest
+  public AnalysisEngineDescription buildComponent(int stageId, int phase, AnyObject aeDescription, String classTag)
           throws Exception {
     Map<String, Object> tuples = Maps.newLinkedHashMap();
     tuples.put(BasePhase.QA_INTERNAL_PHASEID, new Integer(phase));
     tuples.put(EXPERIMENT_UUID_PROPERTY, experimentUuid);
     tuples.put(STAGE_ID_PROPERTY, stageId);
     Class<? extends AnalysisComponent> ac = getFromClassOrInherit(aeDescription,
-            AnalysisComponent.class, tuples);
+            AnalysisComponent.class, tuples, classTag);
     Object[] params = getParamList(tuples);
     AnalysisEngineDescription description = AnalysisEngineFactory.createPrimitiveDescription(ac,
             typeSystem, typePriorities, params);
@@ -397,6 +414,11 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
 
   public static <C> Class<? extends C> getFromClassOrInherit(AnyObject descriptor,
           Class<C> ifaceClass, Map<String, Object> tuples) throws Exception {
+    return getFromClassOrInherit(descriptor, ifaceClass, tuples, "class");
+  }
+
+  public static <C> Class<? extends C> getFromClassOrInherit(AnyObject descriptor,
+          Class<C> ifaceClass, Map<String, Object> tuples, String classTag) throws Exception {
     for (AnyTuple tuple : descriptor.getTuples()) {
       if (!FILTER.contains(tuple.getKey())) {
         if (!tuples.containsKey(tuple.getKey())) {
@@ -404,14 +426,14 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
         }
       }
     }
-    String name = descriptor.getString("class");
+    String name = descriptor.getString(classTag);
     if (name != null) {
       return Class.forName(name).asSubclass(ifaceClass);
     } else {
       String resource = descriptor.getString("inherit");
       if (resource != null) {
         AnyObject yaml = ConfigurationLoader.load(resource);
-        return getFromClassOrInherit(yaml, ifaceClass, tuples);
+        return getFromClassOrInherit(yaml, ifaceClass, tuples, classTag);
       } else {
         throw new IllegalArgumentException(
                 "Illegal experiment descriptor, must contain one node of type <class> or <inherit>");
@@ -450,8 +472,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
 
   }
 
-  public static AnalysisEngine produceAnalysisEngine(@Nullable UimaContext c,
-          AnalysisEngineDescription aeDesc) throws ResourceInitializationException {
+  public static AnalysisEngine produceAnalysisEngine(@Nullable
+  UimaContext c, AnalysisEngineDescription aeDesc) throws ResourceInitializationException {
     AnalysisEngine ae;
     if (c != null) {
       ae = UIMAFramework.produceAnalysisEngine(aeDesc, ((UimaContextAdmin) c).getResourceManager(),
@@ -524,8 +546,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   }
 
   @Deprecated
-  public static AnalysisEngine createAnalysisEngine(@Nullable UimaContext c,
-          Map<String, Object> tuples, Class<? extends AnalysisComponent> comp)
+  public static AnalysisEngine createAnalysisEngine(@Nullable
+  UimaContext c, Map<String, Object> tuples, Class<? extends AnalysisComponent> comp)
           throws ResourceInitializationException {
     Object[] params = getParamList(tuples);
     AnalysisEngineDescription aeDesc = AnalysisEngineFactory.createPrimitiveDescription(comp,
