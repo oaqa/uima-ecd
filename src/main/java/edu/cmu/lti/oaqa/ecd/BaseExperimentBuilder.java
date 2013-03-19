@@ -426,6 +426,11 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
         }
       }
     }
+    
+    if (!tuples.containsKey("class-tag")) {
+      tuples.put("class-tag", classTag);
+    }
+    
     String name = descriptor.getString(classTag);
     if (name != null) {
       return Class.forName(name).asSubclass(ifaceClass);
@@ -435,20 +440,30 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
         AnyObject yaml = ConfigurationLoader.load(resource);
         return getFromClassOrInherit(yaml, ifaceClass, tuples, classTag);
       } else {
-        throw new IllegalArgumentException(
+        String className = descriptor.getString("class");
+        if (className != null) {
+          return Class.forName(className).asSubclass(ifaceClass);
+        } else {
+          throw new IllegalArgumentException(
                 "Illegal experiment descriptor, must contain one node of type <class> or <inherit>");
+        }
       }
     }
   }
-
+  
   public static <C> Class<? extends C> loadFromClassOrInherit(ResourceHandle resource,
           Class<C> ifaceClass, Map<String, Object> tuples) throws Exception {
+    return loadFromClassOrInherit(resource, ifaceClass, tuples, "class");
+  }
+
+  public static <C> Class<? extends C> loadFromClassOrInherit(ResourceHandle resource,
+          Class<C> ifaceClass, Map<String, Object> tuples, String classTag) throws Exception {
     if (resource.getType() == HandleType.CLASS) {
       return Class.forName(resource.resource).asSubclass(ifaceClass);
     } else {
       if (resource.getType() == HandleType.INHERIT) {
         AnyObject yaml = ConfigurationLoader.load(resource.resource);
-        return getFromClassOrInherit(yaml, ifaceClass, tuples);
+        return getFromClassOrInherit(yaml, ifaceClass, tuples, classTag);
       } else {
         throw new IllegalArgumentException(
                 "Illegal experiment descriptor, must contain one node of type <class> or <inherit>");

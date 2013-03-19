@@ -48,6 +48,17 @@ import edu.cmu.lti.oaqa.ecd.ResourceHandle.HandleType;
 @OperationalProperties(outputsNewCases = true)
 public final class BasePhaseLoader {
   
+  private String classTag;
+  
+  public BasePhaseLoader() {
+    this("class");
+  }
+  
+  public BasePhaseLoader(String classTag) {
+    super();
+    this.classTag = classTag;
+  }
+
   private static final String CROSS_PARAMS_KEY = "cross-opts";
   
   public AnalysisEngine[] loadOptions(AnalysisEngineDescription[] aeds) {
@@ -169,7 +180,7 @@ public final class BasePhaseLoader {
     List<AnalysisEngineDescription> aes = Lists.newArrayList();
     Map<String, Object> tuples = Maps.newLinkedHashMap();
     Class<? extends AnalysisComponent> comp = BaseExperimentBuilder.loadFromClassOrInherit(handle,
-            AnalysisComponent.class, tuples);
+            AnalysisComponent.class, tuples, classTag);
     AnyObject crossParams = (AnyObject) tuples.remove(CROSS_PARAMS_KEY);
     if (crossParams == null) {
       AnalysisEngineDescription aeDesc = BaseExperimentBuilder.createAnalysisEngineDescription(

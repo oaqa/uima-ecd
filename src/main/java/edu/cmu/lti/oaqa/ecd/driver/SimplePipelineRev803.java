@@ -24,6 +24,7 @@ import static org.uimafit.factory.CollectionReaderFactory.createCollectionReader
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.uima.UIMAException;

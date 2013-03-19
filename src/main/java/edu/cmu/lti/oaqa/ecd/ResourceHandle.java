@@ -19,10 +19,10 @@ package edu.cmu.lti.oaqa.ecd;
 public class ResourceHandle {
   
   public enum HandleType {
-    INHERIT, CLASS, PIPELINE;
+    INHERIT, CLASS, PIPELINE, TRAINCLASS;
     
     public static HandleType getInstance(String value) {
-      return HandleType.valueOf(value.toUpperCase());
+      return HandleType.valueOf(value.toUpperCase().replaceAll("-",""));
     }
   }
   

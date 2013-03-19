@@ -84,6 +84,8 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
 
   private PhasePersistenceProvider persistence;
 
+  private String classTag;
+  
   @Override
   public void initialize(UimaContext ctx) throws ResourceInitializationException {
     super.initialize(ctx);
@@ -93,6 +95,10 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
               "Must provide a parameter of type <persistence-provider>"));
     }
     this.persistence = BaseExperimentBuilder.loadProvider(pp, PhasePersistenceProvider.class);
+    this.classTag = (String) ctx.getConfigParameterValue("class-tag");
+    if(classTag == null){
+      classTag = "class";
+    }
     this.phaseName = (String) ctx.getConfigParameterValue("name");
     this.phaseNo = (Integer) ctx.getConfigParameterValue(QA_INTERNAL_PHASEID);
     this.optionTimeout = (Integer) ctx.getConfigParameterValue(TIMEOUT_KEY);
@@ -109,7 +115,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     String experimentId = (String) ctx
             .getConfigParameterValue(BaseExperimentBuilder.EXPERIMENT_UUID_PROPERTY);
     String optDescr = (String) ctx.getConfigParameterValue("options");
-    BasePhaseLoader loader = new BasePhaseLoader();
+    BasePhaseLoader loader = new BasePhaseLoader(classTag);
     this.optionDescriptions = loader.loadOptionDescriptions(optDescr);
     if (!lazyLoadOptions) {
       this.options = loader.loadOptions(optionDescriptions);

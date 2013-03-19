@@ -1,2 +1,4 @@
 class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorA1
 train-class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1
+
+model: filename1.xml

@@ -36,16 +36,24 @@ import com.google.common.collect.Lists;
 
 import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.ExperimentBuilder;
+import edu.cmu.lti.oaqa.ecd.ExperimentPersistenceProvider;
+import edu.cmu.lti.oaqa.ecd.GroupExperimentPersistenceProvider;
 import edu.cmu.lti.oaqa.ecd.collection.KnownSizeCollectionReader;
+import edu.cmu.lti.oaqa.ecd.config.ConfigurationLoader;
 import edu.cmu.lti.oaqa.ecd.config.Stage;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfiguration;
 import edu.cmu.lti.oaqa.ecd.config.StagedConfigurationImpl;
 import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
 import edu.cmu.lti.oaqa.ecd.flow.strategy.FunnelingStrategy;
+import edu.cmu.lti.oaqa.ecd.impl.DefaultExperimentPersistenceProvider;
 import edu.cmu.lti.oaqa.ecd.impl.DefaultFunnelingStrategy;
+import edu.cmu.lti.oaqa.ecd.impl.DefaultGroupExperimentPersistenceProvider;
 
 public final class ECDDriver {
 
+  private static final int TEST_FLAG = 1;
+  private static final int TRAIN_FLAG = 0;
+  
   public static final String TRAIN_CLASS = "train-class";
   public static final String TEST_CLASS = "class";
   
@@ -58,6 +66,7 @@ public final class ECDDriver {
   private final List<Long> processedItems = Lists.newArrayList();
   private TypeSystemDescription typeSystem;
   private String resource;
+  private DefaultGroupExperimentPersistenceProvider persistence;
   
   public ECDDriver(String resource, String uuid) throws Exception {
     typeSystem = TypeSystemDescriptionFactory.createTypeSystemDescription();
@@ -114,22 +123,58 @@ public final class ECDDriver {
       testSize = totalSize/fold;
     }
     
+    persistence = newGroupPersistenceProvider(config);
+    
     for (int i = 0; i < fold; i++) {
       System.out.println("Fold "+i);
       int offset = (int) (totalSize*i/fold);
-      int[] pipelineAssignments = createPipelineAssignments(posMapping, offset, testSize);
-
-      
-      BaseExperimentBuilder foldExpBuilder = new BaseExperimentBuilder(UUID.randomUUID().toString(), resource, typeSystem);
-
-      FunneledFlow funnel = ps.newFunnelStrategy(foldExpBuilder.getExperimentUuid());
-      reader = (KnownSizeCollectionReader) foldExpBuilder.buildCollectionReader(conf, stage.getId());
-      AnalysisEngine[] trainPipeline = createPipeline(foldExpBuilder, conf, stage, funnel, TRAIN_CLASS);
-      AnalysisEngine[] testPipeline = createPipeline(foldExpBuilder, conf, stage, funnel, TEST_CLASS);
-      SimplePipelineRev803.runPipelineWithinDuty(reader, pipelineAssignments, 0, trainPipeline);
-      long total = SimplePipelineRev803.runPipelineWithinDuty(reader, pipelineAssignments, 1, testPipeline);
-      processedItems.add(total);
+      int[] pipelineAssignments = createPipelineAssignments(posMapping, offset, testSize);    
+      singleRun(String.valueOf(fold), pipelineAssignments, conf, stage, ps, TRAIN_CLASS, TRAIN_FLAG);
+      singleRun(String.valueOf(fold), pipelineAssignments, conf, stage, ps, TEST_CLASS, TEST_FLAG);
     }
+  }
+
+  private void singleRun(String fold, int[] pipelineAssignments, AnyObject conf, Stage stage, FunnelingStrategy ps, String classTag, int assignmentID) throws Exception{
+    BaseExperimentBuilder foldExpBuilder = new BaseExperimentBuilder(UUID.randomUUID().toString(), resource, typeSystem);
+    insertGroupExperiment(fold, foldExpBuilder.getExperimentUuid(), pipelineAssignments);
+    FunneledFlow funnel = ps.newFunnelStrategy(foldExpBuilder.getExperimentUuid());
+    KnownSizeCollectionReader reader = (KnownSizeCollectionReader) foldExpBuilder.buildCollectionReader(conf, stage.getId());
+    AnalysisEngine[] pipeline = createPipeline(foldExpBuilder, conf, stage, funnel, classTag);
+    System.out.println(classTag+":");
+    long total = SimplePipelineRev803.runPipelineWithinDuty(reader, pipelineAssignments, assignmentID, pipeline);
+    processedItems.add(total);
+  }
+  
+  
+  private DefaultGroupExperimentPersistenceProvider newGroupPersistenceProvider(AnyObject config)
+          throws ResourceInitializationException {
+    AnyObject pprovider = config.getAnyObject("group-persistence-provider");
+    if (pprovider == null) {
+      return new DefaultGroupExperimentPersistenceProvider();
+    }
+    try {
+      return (DefaultGroupExperimentPersistenceProvider) builder.initializeResource(config,
+              "group-persistence-provider", GroupExperimentPersistenceProvider.class);
+    } catch (Exception e) {
+      throw new ResourceInitializationException(
+              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
+                  "group-persistence-provider", config }, e);
+    }
+  }
+  
+  private void insertGroupExperiment(String fold, String foldUuid, int[] pipelineAssignments) throws Exception {
+    AnyObject experiment = config.getAnyObject("configuration");
+    String name = experiment.getString("name");
+    String author = experiment.getString("author");
+    
+    StringBuffer testIdxs = new StringBuffer();
+    for (int i = 0; i < pipelineAssignments.length; i++) {
+      if(pipelineAssignments[i] == TEST_FLAG){
+        testIdxs.append(i).append(",");
+      }
+    }
+    persistence.insertGroupExperiment(builder.getExperimentUuid(), fold, foldUuid, name, author,
+            ConfigurationLoader.getString(resource), resource, testIdxs.toString());
   }
   
   private AnalysisEngine[] createPipeline(BaseExperimentBuilder foldExpBuilder, AnyObject conf, Stage stage, FixedFlow funnel, String classTag) throws Exception{
@@ -144,7 +189,7 @@ public final class ECDDriver {
   
   private int[] createPipelineAssignments(int[] posMapping, int testStart, int testSize) {
     int[] assignments = new int[posMapping.length];
-    Arrays.fill(assignments, testStart, testStart+testSize, 1);
+    Arrays.fill(assignments, testStart, testStart+testSize, 1);  //FIXME
     return assignments;
   }
 

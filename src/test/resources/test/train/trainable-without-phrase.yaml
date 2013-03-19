@@ -2,12 +2,20 @@ configuration:
   name: train-test
   author: junit
   
+#group-persistence-provider:
+#  inherit: test.train.db.local-group-persistence-provider
+  
 collection-reader:
   inherit: test.collection.known-size-reader
-
 
 train-config:
   crossvalidation-fold: 5
 
 pipeline:
+
+  - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorA1
+
   - inherit: test.train.trainable-annotator1
+  
+  
+  
