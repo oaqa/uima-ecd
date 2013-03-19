@@ -39,7 +39,7 @@ public class DriverTest {
   
   @Test
   public void testTrainableWithoutPhrasePipeline() throws Exception {
-    testPipeline("test.train.trainable-without-phrase", new long[] {10,10,10,10,10});
+    testPipeline("test.train.trainable-without-phrase", new long[] {10,10,10,10,10,10,10,10,10,10});
   }
   
   void testPipeline(String resource, long[] sizes) throws Exception {

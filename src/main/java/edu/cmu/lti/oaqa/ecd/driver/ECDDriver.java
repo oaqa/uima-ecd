@@ -16,6 +16,7 @@
 
 package edu.cmu.lti.oaqa.ecd.driver;
 
+import java.lang.reflect.Array;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
@@ -189,7 +190,11 @@ public final class ECDDriver {
   
   private int[] createPipelineAssignments(int[] posMapping, int testStart, int testSize) {
     int[] assignments = new int[posMapping.length];
-    Arrays.fill(assignments, testStart, testStart+testSize, 1);  //FIXME
+    for (int i = 0; i < posMapping.length; i++) {
+      if(i>=testStart && i<testStart+testSize){
+        assignments[posMapping[i]] = TEST_FLAG;
+      }
+    }
     return assignments;
   }
 
