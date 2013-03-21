@@ -1,5 +1,5 @@
 /*
- *  Copyright 2012 Carnegie Meshufflellon University
+ *  Copyright 2012 Carnegie Mellon University
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -75,6 +75,8 @@ public final class ECDDriver {
     this.builder = new BaseExperimentBuilder(uuid, resource, typeSystem);
     this.config = builder.getConfiguration();
   }
+  
+  
 
   public void run() throws Exception {
     StagedConfiguration stagedConfig = new StagedConfigurationImpl(config);
