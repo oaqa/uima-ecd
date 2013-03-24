@@ -95,6 +95,16 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     this.persistence = newPersistenceProvider(configuration);
     insertExperiment(configuration, resource);
   }
+  
+  public BaseExperimentBuilder(String experimentUuid, AnyObject config,
+          TypeSystemDescription typeSystem) throws Exception {
+    this.typeSystem = typeSystem;
+    this.experimentUuid = experimentUuid;
+    this.configuration = config;
+    this.persistence = newPersistenceProvider(configuration);
+    //insertExperiment(configuration, resource);
+    //TODO merge two constructor later
+  }
 
   private ExperimentPersistenceProvider newPersistenceProvider(AnyObject config)
           throws ResourceInitializationException {
