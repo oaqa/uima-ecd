@@ -76,7 +76,11 @@ public final class ECDDriver {
     this.config = builder.getConfiguration();
   }
   
-  
+  public ECDDriver(AnyObject config, String uuid) throws Exception {
+    TypeSystemDescription typeSystem = TypeSystemDescriptionFactory.createTypeSystemDescription();
+    this.builder = new BaseExperimentBuilder(uuid, config, typeSystem);
+    this.config = builder.getConfiguration();
+  }
 
   public void run() throws Exception {
     StagedConfiguration stagedConfig = new StagedConfigurationImpl(config);
