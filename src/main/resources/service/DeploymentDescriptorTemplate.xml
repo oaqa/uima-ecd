@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<analysisEngineDeploymentDescription
+	xmlns="http://uima.apache.org/resourceSpecifier" xmlns:th="http://www.thymeleaf.org">
+
+	<name th:text="${name}">CSE Annotator Name</name>
+
+	<description th:text="${description}">CSE annotator description</description>
+
+	<deployment protocol="jms" provider="activemq">
+		<service>
+			<inputQueue th:attr="endpoint=${endpoint}, brokerURL=${brokerURL}" />
+			<topDescriptor>
+				<import th:attr="location=${topDescriptor}" />
+			</topDescriptor>
+		</service>
+	</deployment>
+
+</analysisEngineDeploymentDescription>
