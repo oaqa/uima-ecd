@@ -51,6 +51,16 @@
 			<groupId>org.uimafit</groupId>
 			<artifactId>uimafit</artifactId>
 			<version>1.4.0</version>
+			 <exclusions>
+              <exclusion>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+              </exclusion>
+            </exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>

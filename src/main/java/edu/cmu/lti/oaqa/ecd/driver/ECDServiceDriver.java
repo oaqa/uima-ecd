@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,9 @@ import mx.bigdata.anyobject.AnyObject;
 import mx.bigdata.anyobject.AnyTuple;
 import net.sf.saxon.Transform;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.aae.controller.AnalysisEngineController;
 import org.apache.uima.aae.jmx.monitor.JmxMonitor;
@@ -50,8 +54,16 @@ public class ECDServiceDriver extends UIMA_Service {
     DEBUG_SERVICE_CONFIG = Boolean.parseBoolean(System.getProperty(
             "ECDServiceDriver.DEBUG_SERVICE_CONFIG", "false"));
 
-    File xslTransform = new File(ECDServiceDriver.class.getResource(DD2SPRING_XSL).toURI());
-
+    //File xslTransform = new File(ECDServiceDriver.class.getResource(DD2SPRING_XSL).toURI());
+    //TODO needs major clean up about files 
+    URL xsltResource = getClass().getResource(DD2SPRING_XSL);
+    File xslTransform = File.createTempFile(
+            FilenameUtils.getBaseName(xsltResource.getFile()),
+            FilenameUtils.getExtension(xsltResource.getFile()));
+    IOUtils.copy(xsltResource.openStream(),
+            FileUtils.openOutputStream(xslTransform));
+    
+    
     String[] springConfigFileArray = new String[args.length];
     for (int i = 0; i < args.length; i++) {
       String resource = args[i];
@@ -107,8 +119,19 @@ public class ECDServiceDriver extends UIMA_Service {
       context.setVariable(tuple.getKey(), (String) tuple.getObject());
     }
     context.setVariable("topDescriptor", aeDescPath);
+    
+    String endpoint = config.getString("endpoint");
+    if(endpoint == null){
+      endpoint = config.getString("class");
+      context.setVariable("endpoint", endpoint);
+    }
+    
+    String brokerURL = config.getString("brokerURL");
+    if(brokerURL == null){
+      context.setVariable("brokerURL", "tcp://localhost:61616");
+    }
 
-    File dd = File.createTempFile(config.getString("endpoint"), ".xml");
+    File dd = File.createTempFile(endpoint, ".xml");
     if (!DEBUG_SERVICE_CONFIG) {
       dd.deleteOnExit();
     }
