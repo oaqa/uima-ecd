@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URL;
 
 import mx.bigdata.anyobject.AnyObject;
 import mx.bigdata.anyobject.impl.SnakeYAMLLoader;
@@ -35,10 +36,14 @@ public class ConfigurationLoader {
   }
 
   public static AnyObject load(String resource) throws IOException {
+    
     String resourceLocation = getResourceLocation(resource, true);
     InputStream in = ConfigurationLoader.class.getResourceAsStream(resourceLocation);
     if (in == null) {
-      throw new FileNotFoundException(resourceLocation + " is not present on classpath");
+      in = new URL(resource).openStream();
+      if (in == null) {
+        throw new FileNotFoundException(resourceLocation + " is not present on classpath");
+      }
     }
     try {
       return SnakeYAMLLoader.getInstance().load(in);
