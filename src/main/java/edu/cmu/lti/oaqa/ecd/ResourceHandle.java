@@ -41,7 +41,7 @@ public class ResourceHandle {
 
   public static ResourceHandle newHandle(String type, String resource) {
     try {
-      return new ResourceHandle(HandleType.valueOf(type.toUpperCase()), resource);
+      return new ResourceHandle(HandleType.getInstance(type), resource);
     } catch (Exception e) {
       throw new IllegalArgumentException(
               "Illegal experiment descriptor, must contain one node of type <class> or <inherit>");

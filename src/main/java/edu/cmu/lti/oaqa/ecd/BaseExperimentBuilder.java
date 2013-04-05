@@ -72,7 +72,11 @@ import edu.cmu.lti.oaqa.ecd.phase.BasePhase;
 
 public final class BaseExperimentBuilder implements ExperimentBuilder {
 
-  private static final Set<String> FILTER = ImmutableSet.of("class", "inherit", "pipeline");
+  private static final String CLASS_TAG_PARAMETER = "class-tag";
+
+  public static final String DEFAULT_CLASS_TAG = "class";
+
+  private static final Set<String> FILTER = ImmutableSet.of(DEFAULT_CLASS_TAG, "inherit", "pipeline");
 
   private static final ResourceHandle NOOP_RESOURCE = ResourceHandle.newInheritHandle("base.noop");
 
@@ -172,7 +176,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   @Override
   public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId,
           FixedFlow funnel, boolean outputNewCASes) throws Exception {
-    return buildPipeline(config, pipeline, stageId, funnel, outputNewCASes, "class");
+    return buildPipeline(config, pipeline, stageId, funnel, outputNewCASes, DEFAULT_CLASS_TAG);
   }
 
   @Override
@@ -196,7 +200,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
 
   private AnalysisEngineDescription buildPipeline(int stageId, Iterable<AnyObject> pipeline,
           FlowControllerDescription fcd) throws Exception {
-    return buildPipeline(stageId, pipeline, fcd, "class");
+    return buildPipeline(stageId, pipeline, fcd, DEFAULT_CLASS_TAG);
   }
 
   private AnalysisEngineDescription buildPipeline(int stageId, Iterable<AnyObject> pipeline,
@@ -253,7 +257,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
 
   public AnalysisEngineDescription buildComponent(int stageId, int phase, AnyObject aeDescription)
           throws Exception {
-    return buildComponent(stageId,  phase, aeDescription, "class");
+    return buildComponent(stageId,  phase, aeDescription, DEFAULT_CLASS_TAG);
   }
   
   // Made this method public to invoke it from BasePhaseTest
@@ -356,14 +360,19 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
     return annotators.toArray(new AnalysisEngine[0]);
   }
-
+  
   public static <T extends Resource> List<T> createResourceList(List<Map<String, String>> names,
           Class<T> type) {
+    return createResourceList(names, type, DEFAULT_CLASS_TAG);
+  }
+
+  public static <T extends Resource> List<T> createResourceList(List<Map<String, String>> names,
+          Class<T> type, String classTag) {
     List<T> resources = Lists.newArrayList();
     for (Map<String, String> name : names) {
       try {
         ResourceHandle handle = buildHandleFromMap(name);
-        resources.add(buildResource(handle, type));
+        resources.add(buildResource(handle, type, classTag));
       } catch (Exception e) {
         System.err.printf("[ERROR] %s Caused by:\n", e);
         Throwables.getRootCause(e).printStackTrace();
@@ -371,13 +380,18 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
     return resources;
   }
-
+  
   public static <T extends Resource> T buildResource(ResourceHandle handle, Class<T> type)
+          throws ResourceInitializationException {
+    return buildResource(handle, type, DEFAULT_CLASS_TAG);
+  }
+
+  public static <T extends Resource> T buildResource(ResourceHandle handle, Class<T> type, String classTag)
           throws ResourceInitializationException {
     Map<String, Object> tuples = Maps.newLinkedHashMap();
     try {
       Class<? extends Resource> resourceClass = loadFromClassOrInherit(handle, Resource.class,
-              tuples);
+              tuples, classTag);
       return buildResource(resourceClass, tuples, type);
     } catch (Exception e) {
       throw new ResourceInitializationException(
@@ -430,7 +444,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
 
   public static <C> Class<? extends C> getFromClassOrInherit(AnyObject descriptor,
           Class<C> ifaceClass, Map<String, Object> tuples) throws Exception {
-    return getFromClassOrInherit(descriptor, ifaceClass, tuples, "class");
+    return getFromClassOrInherit(descriptor, ifaceClass, tuples, DEFAULT_CLASS_TAG);
   }
 
   public static <C> Class<? extends C> getFromClassOrInherit(AnyObject descriptor,
@@ -443,8 +457,8 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
       }
     }
     
-    if (!tuples.containsKey("class-tag")) {
-      tuples.put("class-tag", classTag);
+    if (!tuples.containsKey(CLASS_TAG_PARAMETER)) {
+      tuples.put(CLASS_TAG_PARAMETER, classTag);
     }
     
     String name = descriptor.getString(classTag);
@@ -456,7 +470,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
         AnyObject yaml = ConfigurationLoader.load(resource);
         return getFromClassOrInherit(yaml, ifaceClass, tuples, classTag);
       } else {
-        String className = descriptor.getString("class");
+        String className = descriptor.getString(DEFAULT_CLASS_TAG);
         if (className != null) {
           return Class.forName(className).asSubclass(ifaceClass);
         } else {
@@ -469,7 +483,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   
   public static <C> Class<? extends C> loadFromClassOrInherit(ResourceHandle resource,
           Class<C> ifaceClass, Map<String, Object> tuples) throws Exception {
-    return loadFromClassOrInherit(resource, ifaceClass, tuples, "class");
+    return loadFromClassOrInherit(resource, ifaceClass, tuples, DEFAULT_CLASS_TAG);
   }
 
   public static <C> Class<? extends C> loadFromClassOrInherit(ResourceHandle resource,
@@ -563,7 +577,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   public static <C> Class<? extends C> loadFromClassOrInherit(String handle, Class<C> ifaceClass,
           Map<String, Object> tuples) throws Exception {
     String[] name = handle.split("!");
-    if (name[0].equals("class")) {
+    if (name[0].equals(DEFAULT_CLASS_TAG)) {
       return Class.forName(name[1]).asSubclass(ifaceClass);
     } else {
       if (name[0].equals("inherit")) {
@@ -598,25 +612,38 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
     return ae;
   }
-
+  
   public static <T extends Resource> List<T> createResourceList(Object o, Class<T> type) {
+    return createResourceList(o, type, DEFAULT_CLASS_TAG);
+  }
+  
+  public static <T extends Resource> List<T> createResourceList(Object o, Class<T> type, UimaContext c) {
+    String classTag = (String) c.getConfigParameterValue(CLASS_TAG_PARAMETER);
+    if(classTag != null){
+      return createResourceList(o, type, classTag);
+    }else{
+      return createResourceList(o, type, DEFAULT_CLASS_TAG);
+    }
+  }
+  
+  public static <T extends Resource> List<T> createResourceList(Object o, Class<T> type, String classTag) {
     List<T> resources = null;
     if (o instanceof String) {
       String description = (String) o;
       Yaml yaml = new Yaml();
       @SuppressWarnings("unchecked")
       List<Map<String, String>> ao = (List<Map<String, String>>) yaml.load(description);
-      resources = createResourceList(ao, type);
+      resources = createResourceList(ao, type, classTag);
     } else {
       // TODO: Remove this deprecated call at some point in time
       String[] expListenerNames = (String[]) o;
-      resources = createResourceList(expListenerNames, type);
+      resources = createResourceList(expListenerNames, type, classTag);
     }
     return resources;
   }
 
   @Deprecated
-  private static <T extends Resource> List<T> createResourceList(String[] names, Class<T> type) {
+  private static <T extends Resource> List<T> createResourceList(String[] names, Class<T> type, String classTag) {
     System.err
             .println("The bang syntax (!) for resource creation is deprecated please use the string (|) syntax instead: 'parameter: |\\n - [inherit|class]: fully.qualified.name'");
     System.err.println(" Offending configuration: " + Arrays.toString(names));
@@ -624,7 +651,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     for (String name : names) {
       try {
         ResourceHandle handle = buildHandleFromString(name);
-        resources.add(buildResource(handle, type));
+        resources.add(buildResource(handle, type, classTag));
       } catch (Exception e) {
         e.printStackTrace();
       }
