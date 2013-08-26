@@ -92,7 +92,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
 
   private final ExperimentPersistenceProvider persistence;
 
-  private TypePriorities typePriorities = (TypePriorities) null;
+  private TypePriorities typePriorities;
 
   public BaseExperimentBuilder(String experimentUuid, String resource,
           TypeSystemDescription typeSystem) throws Exception {

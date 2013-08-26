@@ -207,7 +207,7 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
   }
 
   @Override
-  public void destroy(){
+  public void destroy() {
     super.destroy();
     executor.shutdown();
   }
