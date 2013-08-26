@@ -84,7 +84,7 @@ public final class ECDDriver {
 
   public void run() throws Exception {
     StagedConfiguration stagedConfig = new StagedConfigurationImpl(config);
-    FunnelingStrategy ps = getProcessingStrategy();
+    FunnelingStrategy ps = getProcessingStrategy(config);
     for (Stage stage : stagedConfig) {
       AnyObject conf = stage.getConfiguration();
       AnyObject trainConf =  conf.getAnyObject(TRAIN_CONFIG);
@@ -223,7 +223,7 @@ public final class ECDDriver {
     return posMapping;
   }
 
-  private FunnelingStrategy getProcessingStrategy() throws ResourceInitializationException {
+  static FunnelingStrategy getProcessingStrategy(AnyObject config) throws ResourceInitializationException {
     FunnelingStrategy ps = new DefaultFunnelingStrategy();
     AnyObject map = config.getAnyObject("processing-strategy");
     if (map != null) {

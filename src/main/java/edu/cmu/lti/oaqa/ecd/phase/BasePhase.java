@@ -204,9 +204,14 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
         ae.collectionProcessComplete();
       }
     }
-    executor.shutdown();
   }
 
+  @Override
+  public void destroy(){
+    super.destroy();
+    executor.shutdown();
+  }
+  
   private void process(final AnalysisEngine ae, JCas nextCas, String prevCasId, Trace prevTrace,
           String optionId, String sequenceId, Trace trace) throws IOException, SAXException,
           Exception {

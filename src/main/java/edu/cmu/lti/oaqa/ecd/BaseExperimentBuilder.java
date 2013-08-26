@@ -182,7 +182,14 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   @Override
   public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId,
           FixedFlow funnel, boolean outputNewCASes, String classTag) throws Exception {
-    loadTypePriorities(config);
+    AnalysisEngineDescription aee = buildPipelineDescription(config, pipeline, stageId, funnel,
+            outputNewCASes, classTag);
+    return AnalysisEngineFactory.createAggregate(aee);
+  }
+  
+  public AnalysisEngineDescription buildPipelineDescription(AnyObject config, String pipeline, int stageId,
+          FixedFlow funnel, boolean outputNewCASes, String classTag) throws Exception {
+    typePriorities = loadTypePriorities(config);
     Iterable<AnyObject> iterable = config.getIterable(pipeline);
     FlowControllerDescription fcd = FlowControllerFactory
             .createFlowControllerDescription(FixedFlowController797182.class);
@@ -194,8 +201,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
     aee.getAnalysisEngineMetaData().getOperationalProperties().setOutputsNewCASes(outputNewCASes);
     aee.getAnalysisEngineMetaData().setName(pipeline);
-
-    return AnalysisEngineFactory.createAggregate(aee);
+    return aee;
   }
 
   private AnalysisEngineDescription buildPipeline(int stageId, Iterable<AnyObject> pipeline,
@@ -214,7 +220,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
     return builder.createAggregateDescription();
   }
-
+  
   public static String[] getFromListOrInherit(AnyObject descriptor, String listName)
           throws IOException {
     Iterable<String> iterable = descriptor.getIterable(listName);
@@ -240,7 +246,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
 
   // Load type priorities
   public static TypePriorities loadTypePriorities(AnyObject config) {
-    AnyObject tpObject = config.getAnyObject("createPrimitiveDescription");
+    AnyObject tpObject = config.getAnyObject("type-priorities");
     if (tpObject == null) {
       return null;
     }

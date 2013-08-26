@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import mx.bigdata.anyobject.AnyObject;
 import mx.bigdata.anyobject.AnyTuple;
@@ -30,6 +31,7 @@ import org.apache.uima.util.Level;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import org.thymeleaf.templateresolver.TemplateResolver;
 import org.uimafit.factory.AnalysisEngineFactory;
 import org.uimafit.factory.TypeSystemDescriptionFactory;
 
@@ -37,6 +39,8 @@ import com.google.common.collect.Maps;
 
 import edu.cmu.lti.oaqa.ecd.BaseExperimentBuilder;
 import edu.cmu.lti.oaqa.ecd.config.ConfigurationLoader;
+import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
+import edu.cmu.lti.oaqa.ecd.flow.strategy.FunnelingStrategy;
 
 public class ECDServiceDriver extends UIMA_Service {
 
@@ -54,27 +58,27 @@ public class ECDServiceDriver extends UIMA_Service {
     DEBUG_SERVICE_CONFIG = Boolean.parseBoolean(System.getProperty(
             "ECDServiceDriver.DEBUG_SERVICE_CONFIG", "false"));
 
-    //File xslTransform = new File(ECDServiceDriver.class.getResource(DD2SPRING_XSL).toURI());
-    //TODO needs major clean up about files 
+    // TODO needs major clean up of tmp files
     URL xsltResource = getClass().getResource(DD2SPRING_XSL);
-    File xslTransform = File.createTempFile(
-            FilenameUtils.getBaseName(xsltResource.getFile()),
+    File xslTransform = File.createTempFile(FilenameUtils.getBaseName(xsltResource.getFile()),
             FilenameUtils.getExtension(xsltResource.getFile()));
-    IOUtils.copy(xsltResource.openStream(),
-            FileUtils.openOutputStream(xslTransform));
-    
-    
+    if (!DEBUG_SERVICE_CONFIG) {
+      xslTransform.deleteOnExit();
+    }
+    IOUtils.copy(xsltResource.openStream(), FileUtils.openOutputStream(xslTransform));
+
     String[] springConfigFileArray = new String[args.length];
     for (int i = 0; i < args.length; i++) {
       String resource = args[i];
       AnyObject config = ConfigurationLoader.load(resource);
-      AnalysisEngineDescription description = createServiceComponentDescription(config);
+
+      AnalysisEngineDescription description = createServiceAEDescription(resource, config);
       File aeDescFile = File.createTempFile(resource, ".xml");
       if (!DEBUG_SERVICE_CONFIG) {
         aeDescFile.deleteOnExit();
       }
       description.toXML(new FileOutputStream(aeDescFile));
-      String deployDescFile = createServiceDeploymentDescriptor(config,
+      String deployDescFile = createServiceDeploymentDescriptor(resource, config,
               aeDescFile.getAbsolutePath());
       File springConfigFile = convertDd2SpringDesc(deployDescFile, xslTransform.getAbsolutePath());
 
@@ -92,8 +96,29 @@ public class ECDServiceDriver extends UIMA_Service {
     return springConfigFileArray;
   }
 
-  public static AnalysisEngineDescription createServiceComponentDescription(AnyObject config)
+  static AnalysisEngineDescription createServiceAEDescription(String resource, AnyObject config)
           throws Exception {
+    if (config.getAnyObject("pipeline") == null) {
+      return createComponentDescription(config);
+    } else {
+      return createServicePipelineDescription(resource, config);
+    }
+  }
+
+  // TODO refactor
+  static AnalysisEngineDescription createServicePipelineDescription(String resource,
+          AnyObject config) throws Exception {
+    TypeSystemDescription typeSystem = TypeSystemDescriptionFactory.createTypeSystemDescription();
+    String uuid = UUID.randomUUID().toString();
+    BaseExperimentBuilder builder = new BaseExperimentBuilder(uuid, resource, typeSystem);
+    FunnelingStrategy ps = ECDDriver.getProcessingStrategy(config);
+    FunneledFlow funnel = ps.newFunnelStrategy(builder.getExperimentUuid());
+    AnalysisEngineDescription pipeline = builder.buildPipelineDescription(config, "pipeline", 1,
+            funnel, false, BaseExperimentBuilder.DEFAULT_CLASS_TAG);
+    return pipeline;
+  }
+
+  static AnalysisEngineDescription createComponentDescription(AnyObject config) throws Exception {
     TypeSystemDescription typeSystem = TypeSystemDescriptionFactory.createTypeSystemDescription();
     Map<String, Object> tuples = Maps.newLinkedHashMap();
     Class<? extends AnalysisComponent> ac = BaseExperimentBuilder.getFromClassOrInherit(config,
@@ -102,13 +127,12 @@ public class ECDServiceDriver extends UIMA_Service {
     TypePriorities typePriorities = BaseExperimentBuilder.loadTypePriorities(config);
     AnalysisEngineDescription description = AnalysisEngineFactory.createPrimitiveDescription(ac,
             typeSystem, typePriorities, params);
-
     return description;
   }
 
-  public static String createServiceDeploymentDescriptor(AnyObject config, String aeDescPath)
-          throws IOException {
-    ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
+  static String createServiceDeploymentDescriptor(String resource, AnyObject config,
+          String aeDescPath) throws IOException {
+    TemplateResolver resolver = new ClassLoaderTemplateResolver();
     resolver.setTemplateMode("XML");
     resolver.setSuffix(".xml");
     TemplateEngine engine = new TemplateEngine();
@@ -116,18 +140,18 @@ public class ECDServiceDriver extends UIMA_Service {
 
     Context context = new Context();
     for (AnyTuple tuple : config.getTuples()) {
-      context.setVariable(tuple.getKey(), (String) tuple.getObject());
+      // XXX un-safe
+      if (tuple.getObject() instanceof String) {
+        context.setVariable(tuple.getKey(), (String) tuple.getObject());
+      }
     }
     context.setVariable("topDescriptor", aeDescPath);
-    
-    String endpoint = config.getString("endpoint");
-    if(endpoint == null){
-      endpoint = config.getString("class");
-      context.setVariable("endpoint", endpoint);
-    }
-    
+
+    String endpoint = resource;
+    context.setVariable("endpoint", endpoint);
+
     String brokerURL = config.getString("brokerURL");
-    if(brokerURL == null){
+    if (brokerURL == null) {
       context.setVariable("brokerURL", "tcp://localhost:61616");
     }
 
@@ -135,8 +159,8 @@ public class ECDServiceDriver extends UIMA_Service {
     if (!DEBUG_SERVICE_CONFIG) {
       dd.deleteOnExit();
     }
-    FileWriter ddwriter = new FileWriter(dd);
-    engine.process(DEPLOYMENT_DESCRIPTOR_TEMPLATE, context, ddwriter);
+    FileWriter ddwriter = new FileWriter(dd); // TODO
+    engine.process(DEPLOYMENT_DESCRIPTOR_TEMPLATE, context, ddwriter); // TODO
     ddwriter.close();
     return dd.getAbsolutePath();
   }
@@ -234,7 +258,7 @@ public class ECDServiceDriver extends UIMA_Service {
     }
 
   }
-  
+
   static class ServiceShutdownHook extends Thread {
 
     public SpringContainerDeployer serviceDeployer;
@@ -246,20 +270,19 @@ public class ECDServiceDriver extends UIMA_Service {
     public void run() {
       try {
         AnalysisEngineController topLevelController = serviceDeployer.getTopLevelController();
-        if (topLevelController != null && !topLevelController.isStopped() ) {
-          UIMAFramework.getLogger(CLASS_NAME).logrb(Level.WARNING, CLASS_NAME.getName(),
-                "run", JmsConstants.JMS_LOG_RESOURCE_BUNDLE,
-                "UIMAJMS_caught_signal__INFO", new Object[] { topLevelController.getComponentName() });
+        if (topLevelController != null && !topLevelController.isStopped()) {
+          UIMAFramework.getLogger(CLASS_NAME).logrb(Level.WARNING, CLASS_NAME.getName(), "run",
+                  JmsConstants.JMS_LOG_RESOURCE_BUNDLE, "UIMAJMS_caught_signal__INFO",
+                  new Object[] { topLevelController.getComponentName() });
           serviceDeployer.undeploy(SpringContainerDeployer.QUIESCE_AND_STOP);
         }
-      } catch( Exception e) {
+      } catch (Exception e) {
         if (UIMAFramework.getLogger(CLASS_NAME).isLoggable(Level.WARNING)) {
-          UIMAFramework.getLogger(CLASS_NAME).logrb(Level.WARNING, CLASS_NAME.getName(),
-                  "run", JmsConstants.JMS_LOG_RESOURCE_BUNDLE,
-                  "UIMAJMS_exception__WARNING", e);
+          UIMAFramework.getLogger(CLASS_NAME).logrb(Level.WARNING, CLASS_NAME.getName(), "run",
+                  JmsConstants.JMS_LOG_RESOURCE_BUNDLE, "UIMAJMS_exception__WARNING", e);
         }
       }
     }
-  } 
+  }
 
 }
