@@ -19,6 +19,7 @@ package edu.cmu.lti.oaqa.ecd;
 import mx.bigdata.anyobject.AnyObject;
 
 import org.apache.uima.analysis_engine.AnalysisEngine;
+import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.metadata.FixedFlow;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.resource.Resource;
@@ -34,6 +35,8 @@ public interface ExperimentBuilder {
   AnalysisEngine buildPipeline(AnyObject configuration, String string, int id, FixedFlow funnel) throws Exception;
 
   AnalysisEngine buildPipeline(AnyObject config, String string, int i, FixedFlow object, boolean b) throws Exception;
+
+  AnalysisEngineDescription buildPipelineDescription(AnyObject configuration, String string, int id, FixedFlow funnel) throws Exception;
 
   AnalysisEngine createNoOpEngine() throws Exception;
 

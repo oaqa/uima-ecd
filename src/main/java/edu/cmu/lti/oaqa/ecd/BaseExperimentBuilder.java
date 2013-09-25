@@ -130,6 +130,28 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   }
 
   @Override
+  public AnalysisEngineDescription buildPipelineDescription(AnyObject config, String pipeline, int stageId,
+                                                FixedFlow funnel) throws Exception {
+    try {
+      Iterable<AnyObject> iterable = config.getIterable(pipeline);
+      FlowControllerDescription fcd = FlowControllerFactory
+        .createFlowControllerDescription(FixedFlowController797182.class);
+      AnalysisEngineDescription aee = buildPipeline(stageId, iterable, fcd);
+      if (funnel != null) {
+        FixedFlow fc = (FixedFlow) aee.getAnalysisEngineMetaData().getFlowConstraints();
+        funnel.setFixedFlow(fc.getFixedFlow());
+        aee.getAnalysisEngineMetaData().setFlowConstraints(funnel);
+      }
+      aee.getAnalysisEngineMetaData().setName(pipeline);
+      return aee;
+    } catch (Exception e) {
+      throw new ResourceInitializationException(
+              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
+                  pipeline, config }, e);
+    }
+  }
+
+  @Override
   public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId)
           throws Exception {
     try {

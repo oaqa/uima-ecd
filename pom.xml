@@ -82,6 +82,11 @@
       <scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>spark-uima</groupId>
+			<artifactId>spark-uima</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.uima</groupId>
 			<artifactId>uimaj-as-core</artifactId>
 			<version>2.4.0</version>
@@ -98,6 +103,26 @@
 				<exclusion>
 					<artifactId>josql</artifactId>
 					<groupId>net.sf.josql</groupId>
+				</exclusion>
+				<exclusion>
+				 <artifactId>jetty-all-server</artifactId>
+				 <groupId>org.eclipse.jetty.aggregate</groupId>
+				</exclusion>
+				<exclusion>
+				 <artifactId>jetty-continuation</artifactId>
+				 <groupId>org.eclipse.jetty</groupId>
+				</exclusion>
+				<exclusion>
+				 <artifactId>jetty-util</artifactId>
+				 <groupId>org.eclipse.jetty</groupId>
+				</exclusion>
+				<exclusion>
+				 <artifactId>jetty-webapp</artifactId>
+				 <groupId>org.eclipse.jetty</groupId>
+				</exclusion>
+				<exclusion>
+				 <artifactId>jetty-websocket</artifactId>
+				 <groupId>org.eclipse.jetty</groupId>
 				</exclusion>
 			</exclusions>
 		</dependency>
