@@ -18,6 +18,7 @@ package edu.cmu.lti.oaqa.ecd.phase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.sql.SQLException;
 import java.util.concurrent.ExecutorService;
@@ -25,13 +26,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.zip.GZIPOutputStream;
 
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
-import org.apache.uima.cas.impl.XmiCasSerializer;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -298,11 +299,13 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
   private void storeCas(JCas jcas, final long endTime, final String key) throws IOException,
           SAXException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    GZIPOutputStream gz = new GZIPOutputStream(baos);
-    XmiCasSerializer.serialize(jcas.getCas(), gz);
-    gz.finish();
+    Serialization.serializeWithCompression(jcas.getCas(), baos);
     final byte[] bytes = baos.toByteArray();
     persistence.storeCas(bytes, ExecutionStatus.SUCCESS, endTime, key);
+  }
+
+  public static void deserializeCAS(CAS cas, InputStream in) {
+    Serialization.deserializeCAS(cas, in);
   }
 
   private void storeException(final long endTime, Exception e, final String key,
