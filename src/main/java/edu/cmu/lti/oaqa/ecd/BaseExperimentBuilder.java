@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 import mx.bigdata.anyobject.AnyObject;
 import mx.bigdata.anyobject.AnyTuple;
 
@@ -45,11 +43,11 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.impl.CustomResourceSpecifier_impl;
 import org.apache.uima.resource.metadata.TypePriorities;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.uimafit.factory.AggregateBuilder;
-import org.uimafit.factory.AnalysisEngineFactory;
-import org.uimafit.factory.CollectionReaderFactory;
-import org.uimafit.factory.FlowControllerFactory;
-import org.uimafit.factory.TypePrioritiesFactory;
+import org.apache.uima.fit.factory.AggregateBuilder;
+import org.apache.uima.fit.factory.AnalysisEngineFactory;
+import org.apache.uima.fit.factory.CollectionReaderFactory;
+import org.apache.uima.fit.factory.FlowControllerFactory;
+import org.apache.uima.fit.factory.TypePrioritiesFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.base.Function;
@@ -450,7 +448,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
 
   }
 
-  public static AnalysisEngine produceAnalysisEngine(@Nullable UimaContext c,
+  public static AnalysisEngine produceAnalysisEngine(UimaContext c,
           AnalysisEngineDescription aeDesc) throws ResourceInitializationException {
     AnalysisEngine ae;
     if (c != null) {
@@ -523,29 +521,6 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
   }
 
-  @Deprecated
-  public static AnalysisEngine createAnalysisEngine(@Nullable UimaContext c,
-          Map<String, Object> tuples, Class<? extends AnalysisComponent> comp)
-          throws ResourceInitializationException {
-    Object[] params = getParamList(tuples);
-    AnalysisEngineDescription aeDesc = AnalysisEngineFactory.createPrimitiveDescription(comp,
-            params);
-    StringBuilder sb = new StringBuilder(comp.getSimpleName());
-    if (params.length > 0) {
-      appendMethodSignature(sb, tuples);
-    }
-    aeDesc.getAnalysisEngineMetaData().setName(sb.toString());
-    System.out.println("\t- " + sb.toString());
-    AnalysisEngine ae;
-    if (c != null) {
-      ae = UIMAFramework.produceAnalysisEngine(aeDesc, ((UimaContextAdmin) c).getResourceManager(),
-              null);
-    } else {
-      ae = UIMAFramework.produceAnalysisEngine(aeDesc);
-    }
-    return ae;
-  }
-
   public static <T extends Resource> List<T> createResourceList(Object o, Class<T> type) {
     List<T> resources = null;
     if (o instanceof String) {
@@ -561,22 +536,4 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
     }
     return resources;
   }
-
-  @Deprecated
-  private static <T extends Resource> List<T> createResourceList(String[] names, Class<T> type) {
-    System.err
-            .println("The bang syntax (!) for resource creation is deprecated please use the string (|) syntax instead: 'parameter: |\\n - [inherit|class]: fully.qualified.name'");
-    System.err.println(" Offending configuration: " + Arrays.toString(names));
-    List<T> resources = Lists.newArrayList();
-    for (String name : names) {
-      try {
-        ResourceHandle handle = buildHandleFromString(name);
-        resources.add(buildResource(handle, type));
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
-    return resources;
-  }
-
 }

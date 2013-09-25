@@ -26,8 +26,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.UIMARuntimeException;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -83,7 +81,6 @@ public class FixedFlowController797182 extends CasFlowController_ImplBase {
 
   private int mActionAfterCasMultiplier;
   
-  @Nullable
   private FunneledFlow funnel;
 
   public void initialize(FlowControllerContext aContext) throws ResourceInitializationException {

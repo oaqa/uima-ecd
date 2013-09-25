@@ -453,4 +453,13 @@ class DeferredTerminationJCasWrapper implements JCas {
     return delegate.getViewIterator(localViewNamePrefix);
   }
 
+  @Override
+  public void removeAllExcludingSubtypes(int type) {
+    delegate.removeAllExcludingSubtypes(type);
+  }
+
+  @Override
+  public void removeAllIncludingSubtypes(int type) {
+    delegate.removeAllIncludingSubtypes(type);
+  }
 }

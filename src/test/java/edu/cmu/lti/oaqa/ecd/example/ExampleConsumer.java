@@ -21,7 +21,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
-import org.uimafit.component.CasConsumer_ImplBase;
+import org.apache.uima.fit.component.CasConsumer_ImplBase;
 
 import edu.cmu.lti.oaqa.ecd.phase.ProcessingStepUtils;
 import edu.cmu.lti.oaqa.ecd.phase.Trace;

@@ -18,9 +18,9 @@
 package edu.cmu.lti.oaqa.ecd.driver;
 
 import static java.util.Arrays.asList;
-import static org.uimafit.factory.AnalysisEngineFactory.createAggregate;
-import static org.uimafit.factory.AnalysisEngineFactory.createAggregateDescription;
-import static org.uimafit.factory.CollectionReaderFactory.createCollectionReader;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createAggregate;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createAggregateDescription;
+import static org.apache.uima.fit.factory.CollectionReaderFactory.createCollectionReader;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -146,7 +146,7 @@ public final class SimplePipelineRev803 {
     for (AnalysisEngine engine : engines) {
       metaData.add(engine.getMetaData());
     }
-
+    
     final CAS cas = CasCreationUtils.createCas(metaData);
     try {
       while (reader.hasNext()) {
