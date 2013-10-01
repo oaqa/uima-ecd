@@ -1,5 +1,6 @@
 package edu.cmu.lti.oaqa.ecd.driver;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -25,15 +26,23 @@ import org.apache.uima.adapter.jms.activemq.SpringContainerDeployer;
 import org.apache.uima.adapter.jms.service.UIMA_Service;
 import org.apache.uima.analysis_component.AnalysisComponent;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypePriorities;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.resourceSpecifier.factory.DeploymentDescriptorFactory;
+import org.apache.uima.resourceSpecifier.factory.ServiceContext;
+import org.apache.uima.resourceSpecifier.factory.UimaASPrimitiveDeploymentDescriptor;
+import org.apache.uima.resourceSpecifier.factory.impl.ServiceContextImpl;
 import org.apache.uima.util.Level;
+import org.springframework.util.Assert;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.TemplateResolver;
 import org.uimafit.factory.AnalysisEngineFactory;
 import org.uimafit.factory.TypeSystemDescriptionFactory;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
 
 import com.google.common.collect.Maps;
 
@@ -44,7 +53,7 @@ import edu.cmu.lti.oaqa.ecd.flow.strategy.FunnelingStrategy;
 
 public class ECDServiceDriver extends UIMA_Service {
 
-  private static final String DEPLOYMENT_DESCRIPTOR_TEMPLATE = "service/DeploymentDescriptorTemplate";
+//  private static final String DEPLOYMENT_DESCRIPTOR_TEMPLATE = "service/DeploymentDescriptorTemplate";
 
   private static final String DD2SPRING_XSL = "/service/dd2spring.xsl";
 
@@ -98,7 +107,7 @@ public class ECDServiceDriver extends UIMA_Service {
 
   static AnalysisEngineDescription createServiceAEDescription(String resource, AnyObject config)
           throws Exception {
-    if (config.getAnyObject("pipeline") == null) {
+    if (config.getIterable("pipeline") == null) {
       return createComponentDescription(config);
     } else {
       return createServicePipelineDescription(resource, config);
@@ -131,38 +140,38 @@ public class ECDServiceDriver extends UIMA_Service {
   }
 
   static String createServiceDeploymentDescriptor(String resource, AnyObject config,
-          String aeDescPath) throws IOException {
-    TemplateResolver resolver = new ClassLoaderTemplateResolver();
-    resolver.setTemplateMode("XML");
-    resolver.setSuffix(".xml");
-    TemplateEngine engine = new TemplateEngine();
-    engine.setTemplateResolver(resolver);
-
-    Context context = new Context();
-    for (AnyTuple tuple : config.getTuples()) {
-      // XXX un-safe
-      if (tuple.getObject() instanceof String) {
-        context.setVariable(tuple.getKey(), (String) tuple.getObject());
-      }
+          String aeDescPath) throws IOException, ResourceInitializationException {
+    
+    String deployConfig = config.getString("deploy");
+    Yaml yaml = new Yaml(new Constructor(ServiceContextBeanImpl.class));
+    ServiceContext context = (ServiceContext) yaml.load(deployConfig.toString());
+    context.setDescriptor(aeDescPath);
+    if(context.getEndpoint() == null || context.getEndpoint().isEmpty()){
+      context.setEndpoint(resource);
     }
-    context.setVariable("topDescriptor", aeDescPath);
+    
+    // create DD with default settings
+    UimaASPrimitiveDeploymentDescriptor dd = DeploymentDescriptorFactory
+            .createPrimitiveDeploymentDescriptor(context);
 
-    String endpoint = resource;
-    context.setVariable("endpoint", endpoint);
+    // Get default Error Handler for Process
+    dd.getProcessErrorHandlingSettings().setThresholdCount(4);
 
-    String brokerURL = config.getString("brokerURL");
-    if (brokerURL == null) {
-      context.setVariable("brokerURL", "tcp://localhost:61616");
-    }
+    // Two instances of AE in a jvm
+    //dd.setScaleup(2);
 
-    File dd = File.createTempFile(endpoint, ".xml");
+    // Generate deployment descriptor in xml format
+    String ddXML = dd.toXML();
+    // Write the DD to a temp file
+    File ddFile = File.createTempFile("Deploy_"+resource, ".xml");
     if (!DEBUG_SERVICE_CONFIG) {
-      dd.deleteOnExit();
+      ddFile.deleteOnExit();
     }
-    FileWriter ddwriter = new FileWriter(dd); // TODO
-    engine.process(DEPLOYMENT_DESCRIPTOR_TEMPLATE, context, ddwriter); // TODO
-    ddwriter.close();
-    return dd.getAbsolutePath();
+    BufferedWriter out = new BufferedWriter(new FileWriter(ddFile));
+    out.write(ddXML);
+    out.close();
+
+    return ddFile.getAbsolutePath();
   }
 
   public static File convertDd2SpringDesc(String ddFilePath, String dd2SpringXsltFilePath)
