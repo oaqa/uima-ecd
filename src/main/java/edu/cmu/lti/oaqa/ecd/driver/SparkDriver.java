@@ -40,11 +40,11 @@ import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
 import edu.cmu.lti.oaqa.ecd.flow.strategy.FunnelingStrategy;
 import edu.cmu.lti.oaqa.ecd.impl.DefaultFunnelingStrategy;
 
-import spark.api.java.*;
+import org.apache.spark.api.java.*;
 
-import cmu.edu.lti.bagpipes.spark.JavaSparkUima;
-import cmu.edu.lti.bagpipes.spark.JavaSparkUima.PipelineFunction;
-import cmu.edu.lti.bagpipes.spark.SCAS;
+import edu.cmu.lti.suim.JavaSparkUima;
+import edu.cmu.lti.suim.JavaSparkUima.PipelineFunction;
+import edu.cmu.lti.suim.SCAS;
 
 public final class SparkDriver {
 
