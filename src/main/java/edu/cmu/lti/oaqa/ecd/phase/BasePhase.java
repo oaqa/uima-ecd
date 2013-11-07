@@ -292,7 +292,8 @@ public final class BasePhase extends JCasMultiplier_ImplBase {
     InputElement input = (InputElement) CasUtils.getFirst(jcas, InputElement.class.getName());
     final String dataset = input.getDataset();
     final String sequenceId = input.getSequenceId();
-    persistence.insertExecutionTrace(optionId, sequenceId, dataset, getPhaseNo(), uuid, startTime,
+    final String question = input.getQuestion();
+    persistence.insertExecutionTrace(optionId, question, sequenceId, dataset, getPhaseNo(), uuid, startTime,
             getHostName(), trace.getTrace(), key);
   }
 
