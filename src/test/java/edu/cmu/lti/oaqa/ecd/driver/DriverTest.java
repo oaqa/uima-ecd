@@ -42,7 +42,7 @@ public class DriverTest {
     testPipeline("test.train.trainable-without-phrase", new long[] {10,10,10,10,10,10,10,10,10,10});
   }
   
-  void testPipeline(String resource, long[] sizes) throws Exception {
+  static void testPipeline(String resource, long[] sizes) throws Exception {
     String uuid = UUID.randomUUID().toString();
     System.out.println("Experiment UUID: " + uuid);
     ECDDriver driver = new ECDDriver(resource, uuid);

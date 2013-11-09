@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import mx.bigdata.anyobject.AnyObject;
-import mx.bigdata.anyobject.AnyTuple;
 import net.sf.saxon.Transform;
 
 import org.apache.commons.io.FileUtils;
@@ -32,13 +31,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resourceSpecifier.factory.DeploymentDescriptorFactory;
 import org.apache.uima.resourceSpecifier.factory.ServiceContext;
 import org.apache.uima.resourceSpecifier.factory.UimaASPrimitiveDeploymentDescriptor;
-import org.apache.uima.resourceSpecifier.factory.impl.ServiceContextImpl;
 import org.apache.uima.util.Level;
-import org.springframework.util.Assert;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
-import org.thymeleaf.templateresolver.TemplateResolver;
 import org.uimafit.factory.AnalysisEngineFactory;
 import org.uimafit.factory.TypeSystemDescriptionFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -52,8 +45,6 @@ import edu.cmu.lti.oaqa.ecd.flow.FunneledFlow;
 import edu.cmu.lti.oaqa.ecd.flow.strategy.FunnelingStrategy;
 
 public class ECDServiceDriver extends UIMA_Service {
-
-//  private static final String DEPLOYMENT_DESCRIPTOR_TEMPLATE = "service/DeploymentDescriptorTemplate";
 
   private static final String DD2SPRING_XSL = "/service/dd2spring.xsl";
 
@@ -114,7 +105,7 @@ public class ECDServiceDriver extends UIMA_Service {
     }
   }
 
-  // TODO refactor
+  // TODO re-factor
   static AnalysisEngineDescription createServicePipelineDescription(String resource,
           AnyObject config) throws Exception {
     TypeSystemDescription typeSystem = TypeSystemDescriptionFactory.createTypeSystemDescription();
@@ -141,15 +132,15 @@ public class ECDServiceDriver extends UIMA_Service {
 
   static String createServiceDeploymentDescriptor(String resource, AnyObject config,
           String aeDescPath) throws IOException, ResourceInitializationException {
-    
+
     String deployConfig = config.getString("deploy");
     Yaml yaml = new Yaml(new Constructor(ServiceContextBeanImpl.class));
     ServiceContext context = (ServiceContext) yaml.load(deployConfig.toString());
     context.setDescriptor(aeDescPath);
-    if(context.getEndpoint() == null || context.getEndpoint().isEmpty()){
+    if (context.getEndpoint() == null || context.getEndpoint().isEmpty()) {
       context.setEndpoint(resource);
     }
-    
+
     // create DD with default settings
     UimaASPrimitiveDeploymentDescriptor dd = DeploymentDescriptorFactory
             .createPrimitiveDeploymentDescriptor(context);
@@ -157,13 +148,10 @@ public class ECDServiceDriver extends UIMA_Service {
     // Get default Error Handler for Process
     dd.getProcessErrorHandlingSettings().setThresholdCount(4);
 
-    // Two instances of AE in a jvm
-    //dd.setScaleup(2);
-
     // Generate deployment descriptor in xml format
     String ddXML = dd.toXML();
     // Write the DD to a temp file
-    File ddFile = File.createTempFile("Deploy_"+resource, ".xml");
+    File ddFile = File.createTempFile("Deploy_" + resource, ".xml");
     if (!DEBUG_SERVICE_CONFIG) {
       ddFile.deleteOnExit();
     }
@@ -205,9 +193,7 @@ public class ECDServiceDriver extends UIMA_Service {
         return;
       }
       // Deploy components defined in Spring context files. This method blocks
-      // until
-      // the container is fully initialized and all UIMA-AS components are
-      // succefully
+      // until the container is fully initialized and all UIMA-AS components are succefully
       // deployed.
       SpringContainerDeployer serviceDeployer = service.deploy(contextFiles);
 
@@ -220,12 +206,9 @@ public class ECDServiceDriver extends UIMA_Service {
       ServiceShutdownHook shutdownHook = new ServiceShutdownHook(serviceDeployer);
       Runtime.getRuntime().addShutdownHook(shutdownHook);
 
-      // Check if we should start an optional JMX-based monitor that will
-      // provide service metrics
-      // The monitor is enabled by existence of
-      // -Duima.jmx.monitor.interval=<number> parameter. By
-      // default
-      // the monitor is not enabled.
+      // Check if we should start an optional JMX-based monitor that will provide service metrics
+      // The monitor is enabled by existence of -Duima.jmx.monitor.interval=<number> parameter.
+      // By default the monitor is not enabled.
       String monitorCheckpointFrequency;
       if ((monitorCheckpointFrequency = System.getProperty(JmxMonitor.SamplingInterval)) != null) {
         // Found monitor checkpoint frequency parameter, configure and start the

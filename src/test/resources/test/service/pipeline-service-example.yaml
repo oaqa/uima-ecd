@@ -1,0 +1,35 @@
+configuration:
+  name: test-deploy-pipeline-service
+  author: junit
+  
+persistence-provider:
+  inherit: ecd.default-experiment-persistence-provider
+  
+collection-reader:
+  inherit: test.collection.reader 
+  
+#deployment configuration
+deploy: |
+  endpoint: service.example-pipeline
+  scaleup: 1
+  
+pipeline:
+  - inherit: ecd.phase
+    name: first-phase
+    options: |
+      - inherit: test.first-phase-annotator-a
+      - class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1 
+      - pipeline: [class: edu.cmu.lti.oaqa.ecd.example.FirstPhaseAnnotatorB1, inherit: test.first-phase-annotator-copts, pipeline: [inherit: test.first-phase-annotator-a, inherit: test.first-phase-annotator-copts2]]  
+     
+  - inherit: ecd.phase
+    name: second-phase  
+    options: |
+      - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorA1
+      - class: edu.cmu.lti.oaqa.ecd.example.SecondPhaseAnnotatorB1
+
+  - inherit: ecd.phase
+    name: third-phase  
+    options: |
+      - inherit: test.third-phase-annotator
+      
+ 

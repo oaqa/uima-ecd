@@ -1,0 +1,6 @@
+class: edu.cmu.lti.oaqa.ecd.phase.adapter.JMSAdapterWrapper
+brokerUrl: tcp://localhost:61616
+endpoint: service.example-pipeline
+timeout: 50000
+getmetatimeout: 5000
+cpctimeout: 50000

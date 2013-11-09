@@ -1,0 +1,12 @@
+configuration:
+  name: test-remote-pipeline
+  author: junit
+  
+persistence-provider:
+  inherit: ecd.default-experiment-persistence-provider
+  
+collection-reader:
+  inherit: test.collection.reader 
+  
+pipeline:
+  - inherit: test.service.pipeline-aee-client-example
