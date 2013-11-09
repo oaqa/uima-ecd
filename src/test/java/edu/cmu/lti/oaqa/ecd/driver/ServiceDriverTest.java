@@ -16,14 +16,14 @@
 
 package edu.cmu.lti.oaqa.ecd.driver;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 import org.apache.uima.adapter.jms.activemq.SpringContainerDeployer;
-import org.junit.Test;
+import org.junit.Ignore;
 
 public class ServiceDriverTest {
 
-  @Test
+  @Ignore
   public void testRemotePipeline() throws Exception {
     SpringContainerDeployer serviceDeployer = startService(new String[] { "test.service.pipeline-service-example" });
     assertNotNull(serviceDeployer);
@@ -43,5 +43,4 @@ public class ServiceDriverTest {
     }
     return serviceDeployer;
   }
-
 }
