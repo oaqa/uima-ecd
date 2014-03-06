@@ -32,4 +32,8 @@ public final class PhaseEventBus {
     EVENTBUS.register(listener);
   }
 
+  public static void unregisterForTerminateEvent(TerminableComponent listener) {
+    EVENTBUS.unregister(listener);
+  }
+
 }

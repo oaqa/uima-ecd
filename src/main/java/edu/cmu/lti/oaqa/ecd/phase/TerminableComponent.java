@@ -16,15 +16,12 @@
 
 package edu.cmu.lti.oaqa.ecd.phase;
 
-import java.util.Set;
-
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 
-import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 
 import edu.cmu.lti.oaqa.ecd.phase.event.PhaseEventBus;
@@ -67,5 +64,11 @@ public abstract class TerminableComponent extends JCasAnnotator_ImplBase {
       throw new IllegalStateException("Component already terminated");
     }
   }
+  
+  @Override
+	public void destroy() {
+		super.destroy();
+		PhaseEventBus.unregisterForTerminateEvent(this);
+	}
 
 }
