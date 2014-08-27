@@ -24,12 +24,15 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createCollecti
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
+import org.apache.uima.analysis_engine.CasIterator;
+import org.apache.uima.analysis_engine.JCasIterator;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
@@ -212,17 +215,24 @@ public final class SimplePipelineRev803 {
    * does not {@link AnalysisEngine#destroy() destroy} the engines or send them other events like
    * {@link AnalysisEngine#collectionProcessComplete()}. This is left to the caller.
    *
-   * @param jCas
+   * @param jcas
    *            the jCas to process
    * @param engines
    *            a sequence of analysis engines to run on the jCas
    * @throws UIMAException
    * @throws IOException
    */
-  public static void runPipeline(final JCas jCas, final AnalysisEngine... engines)
+  public static void runPipeline(final JCas jcas, final AnalysisEngine... engines)
       throws UIMAException, IOException {
-    for (AnalysisEngine engine : engines) {
-      engine.process(jCas);
+    if (engines.length == 0) {
+      return;
+    }
+    JCasIterator jcasIter = engines[0].processAndOutputNewCASes(jcas);
+    AnalysisEngine[] enginesRemains = Arrays.copyOfRange(engines, 1, engines.length);
+    while (jcasIter.hasNext()) {
+      JCas nextJcas = jcasIter.next();
+      runPipeline(nextJcas, enginesRemains);
+      nextJcas.release();
     }
   }
 
@@ -240,8 +250,15 @@ public final class SimplePipelineRev803 {
    */
   public static void runPipeline(final CAS cas, final AnalysisEngine... engines)
       throws UIMAException, IOException {
-    for (AnalysisEngine engine : engines) {
-      engine.process(cas);
+    if (engines.length == 0) {
+      return;
+    }
+    CasIterator casIter = engines[0].processAndOutputNewCASes(cas);
+    AnalysisEngine[] enginesRemains = Arrays.copyOfRange(engines, 1, engines.length);
+    while (casIter.hasNext()) {
+      CAS nextCas = casIter.next();
+      runPipeline(nextCas, enginesRemains);
+      nextCas.release();
     }
   }
 

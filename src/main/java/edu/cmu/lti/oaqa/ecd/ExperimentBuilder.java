@@ -40,4 +40,6 @@ public interface ExperimentBuilder {
   <T extends Resource> T initializeResource(AnyObject config, String node, Class<T> type) throws Exception;
 
   AnyObject getConfiguration();
+
+  AnalysisEngine buildPostProcess(AnyObject conf, String string, int id) throws Exception;
 }

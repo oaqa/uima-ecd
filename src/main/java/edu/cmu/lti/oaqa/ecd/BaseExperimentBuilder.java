@@ -130,7 +130,7 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   }
 
   @Override
-  public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId)
+  public AnalysisEngine buildPostProcess(AnyObject config, String pipeline, int stageId)
           throws Exception {
     try {
       return buildPipeline(config, pipeline, stageId, null, false);
@@ -142,10 +142,22 @@ public final class BaseExperimentBuilder implements ExperimentBuilder {
   }
 
   @Override
+  public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId)
+          throws Exception {
+    try {
+      return buildPipeline(config, pipeline, stageId, null, true);
+    } catch (Exception e) {
+      throw new ResourceInitializationException(
+              ResourceInitializationException.ERROR_INITIALIZING_FROM_DESCRIPTOR, new Object[] {
+                  pipeline, config }, e);
+    }
+  }
+  
+  @Override
   public AnalysisEngine buildPipeline(AnyObject config, String pipeline, int stageId,
           FixedFlow funnel) throws Exception {
     try {
-      return buildPipeline(config, pipeline, stageId, funnel, false);
+      return buildPipeline(config, pipeline, stageId, funnel, true);
     } catch (Exception e) {
       Throwables.propagateIfInstanceOf(e, ResourceInitializationException.class);
       throw new ResourceInitializationException(

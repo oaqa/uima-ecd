@@ -34,13 +34,13 @@ import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.cas.text.AnnotationIndex;
+import org.apache.uima.fit.component.JCasMultiplier_ImplBase;
+import org.apache.uima.fit.descriptor.OperationalProperties;
+import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.CasCopier;
-import org.apache.uima.fit.component.JCasMultiplier_ImplBase;
-import org.apache.uima.fit.descriptor.OperationalProperties;
-import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.xml.sax.SAXException;
 
 import com.google.common.base.Throwables;

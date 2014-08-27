@@ -62,7 +62,7 @@ public final class ECDDriver {
       CollectionReader reader = builder.buildCollectionReader(conf, stage.getId());
       AnalysisEngine pipeline = builder.buildPipeline(conf, "pipeline", stage.getId(), funnel);
       if (conf.getIterable("post-process") != null) {
-        AnalysisEngine post = builder.buildPipeline(conf, "post-process", stage.getId());
+        AnalysisEngine post = builder.buildPostProcess(conf, "post-process", stage.getId());
         SimplePipelineRev803.runPipeline(reader, pipeline, post);
       } else {
         SimplePipelineRev803.runPipeline(reader, pipeline);
