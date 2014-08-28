@@ -90,7 +90,7 @@ public final class BasePhaseLoader {
       } else {
         String resource = (String) first.getValue();
         List<AnalysisEngineDescription> options = doLoadOptions(ResourceHandle.newHandle(type,
-                resource));
+                resource), description);
         aes.addAll(options);
       }
     } catch (Exception e) {
@@ -166,8 +166,12 @@ public final class BasePhaseLoader {
   }
 
   private List<AnalysisEngineDescription> doLoadOptions(ResourceHandle handle) throws Exception {
-    List<AnalysisEngineDescription> aes = Lists.newArrayList();
     Map<String, Object> tuples = Maps.newLinkedHashMap();
+    return doLoadOptions(handle, tuples);
+  }
+
+  private List<AnalysisEngineDescription> doLoadOptions(ResourceHandle handle, Map<String, Object> tuples) throws Exception {
+    List<AnalysisEngineDescription> aes = Lists.newArrayList();
     Class<? extends AnalysisComponent> comp = BaseExperimentBuilder.loadFromClassOrInherit(handle,
             AnalysisComponent.class, tuples);
     AnyObject crossParams = (AnyObject) tuples.remove(CROSS_PARAMS_KEY);
