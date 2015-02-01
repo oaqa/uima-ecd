@@ -15,7 +15,7 @@
  */
 
 package edu.cmu.lti.oaqa.ecd.phase;
-
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -120,9 +120,9 @@ public class ProcessingStepUtils {
   public static String getExecutionIdHash(String experimentId, Trace trace, String sequenceId) {
     HashFunction hf = Hashing.md5();
     Hasher hasher = hf.newHasher();
-    hasher.putString(experimentId);
-    hasher.putString(trace.getTrace());
-    hasher.putString(String.valueOf(sequenceId));
+    hasher.putString(experimentId,StandardCharsets.UTF_8);
+    hasher.putString(trace.getTrace(),StandardCharsets.UTF_8);
+    hasher.putString(String.valueOf(sequenceId),StandardCharsets.UTF_8);
     HashCode hash = hasher.hash();
     final String traceHash = hash.toString();
     return traceHash;

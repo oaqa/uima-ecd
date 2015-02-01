@@ -18,7 +18,7 @@ package edu.cmu.lti.oaqa.ecd.phase;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-
+import java.nio.charset.StandardCharsets;
 public final class Trace {
 
   private static final HashFunction hf = Hashing.sha256();
@@ -29,7 +29,7 @@ public final class Trace {
   
   public Trace(String trace) {
     this.trace = trace;
-    this.traceId = hf.hashString(trace).toString();
+    this.traceId = hf.hashString(trace,StandardCharsets.UTF_8).toString();
   }
   
   public int hashCode() {
