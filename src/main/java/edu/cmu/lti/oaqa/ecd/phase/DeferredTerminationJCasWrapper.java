@@ -234,12 +234,6 @@ class DeferredTerminationJCasWrapper implements JCas {
   }
 
   @Override
-  public FloatArray getFloatArray0L() {
-    testLiveness(); 
-    return delegate.getFloatArray0L();
-  }
-
-  @Override
   public FSArray getFSArray0L() {
     testLiveness(); 
     return delegate.getFSArray0L();
