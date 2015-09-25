@@ -138,9 +138,9 @@ public class ProcessingStepUtils {
     String sequenceId = ProcessingStepUtils.getSequenceId(jcas);
     HashFunction hf = Hashing.md5();
     Hasher hasher = hf.newHasher();
-    hasher.putString(experimentId);
-    hasher.putString(trace.getTrace());
-    hasher.putString(String.valueOf(sequenceId));
+    hasher.putString(experimentId, StandardCharsets.UTF_16LE);
+    hasher.putString(trace.getTrace(), StandardCharsets.UTF_16LE);
+    hasher.putString(String.valueOf(sequenceId), StandardCharsets.UTF_16LE);
     HashCode hash = hasher.hash();
     final String traceHash = hash.toString();
     return traceHash;
