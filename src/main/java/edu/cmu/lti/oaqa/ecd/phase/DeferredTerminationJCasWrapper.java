@@ -20,21 +20,7 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.ListIterator;
 
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
-import org.apache.uima.cas.CASRuntimeException;
-import org.apache.uima.cas.ConstraintFactory;
-import org.apache.uima.cas.FSIndexRepository;
-import org.apache.uima.cas.FSIterator;
-import org.apache.uima.cas.FSMatchConstraint;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeaturePath;
-import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.FeatureValuePath;
-import org.apache.uima.cas.SofaFS;
-import org.apache.uima.cas.SofaID;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.TypeSystem;
+import org.apache.uima.cas.*;
 import org.apache.uima.cas.admin.CASAdminException;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.LowLevelCAS;
@@ -424,6 +410,19 @@ class DeferredTerminationJCasWrapper implements JCas {
   }
 
   @Override
+  public <T extends Annotation> AnnotationIndex<T> getAnnotationIndex(Class<T> aClass)
+          throws CASRuntimeException {
+    testLiveness();
+    return delegate.getAnnotationIndex(aClass);
+  }
+
+  @Override
+  public <T extends TOP> FSIterator<T> getAllIndexedFS(Class<T> aClass) {
+    testLiveness();
+    return delegate.getAllIndexedFS(aClass);
+  }
+
+  @Override
   public AnnotationIndex<Annotation> getAnnotationIndex(Type type) throws CASRuntimeException {
     testLiveness(); 
     return delegate.getAnnotationIndex(type);
@@ -445,6 +444,24 @@ class DeferredTerminationJCasWrapper implements JCas {
   public Iterator<JCas> getViewIterator(String localViewNamePrefix) throws CASException {
     testLiveness();
     return delegate.getViewIterator(localViewNamePrefix);
+  }
+
+  @Override
+  public AutoCloseable protectIndexes() {
+    testLiveness();
+    return delegate.protectIndexes();
+  }
+
+  @Override
+  public void protectIndexes(Runnable runnable) {
+    testLiveness();
+    delegate.protectIndexes();
+  }
+
+  @Override
+  public <T extends TOP> FSIndex<T> getIndex(String s, Class<T> aClass) {
+    testLiveness();
+    return delegate.getIndex(s, aClass);
   }
 
   @Override
